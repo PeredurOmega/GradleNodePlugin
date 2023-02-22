@@ -37,6 +37,23 @@ tasks.named("build") {
     inputs.dir("src")
     outputs.dir("dist")
 }
+
+// To add script task individually
+npm {
+    includeAllScripts.set(false)
+}
+
+val serviceProvider = project.gradle.sharedServices.registrations.getByName("npmService") as NpmService
+
+tasks.register<NpmScriptTask>("gradleTaskName", "npmCommand")
+task.configure {
+    dependsOn("npmInstall")
+    group = "npm"
+    
+    // Ensure that the process is properly destroyed when gradle is stopped
+    getNpmService().set(serviceProvider)
+    usesService(serviceProvider)
+}
 ```
 ### Groovy
 ```groovy
@@ -63,6 +80,23 @@ tasks.named("build") {
     // Configure the task inputs and outputs to allow for up-to-date checks
     inputs.dir("src")
     outputs.dir("dist")
+}
+
+// To add script task individually
+npm {
+    includeAllScripts.set(false)
+}
+
+NpmService serviceProvider = (NpmService) project.gradle.sharedServices.registrations.getByName("npmService")
+
+tasks.register("gradleTaskName", NpmScriptTask, "npmCommand")
+task.configure {
+    dependsOn("npmInstall")
+    group = "npm"
+    
+    // Ensure that the process is properly destroyed when gradle is stopped
+    getNpmService().set(serviceProvider)
+    usesService(serviceProvider)
 }
 ```
 
