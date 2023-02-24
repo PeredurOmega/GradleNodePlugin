@@ -10,6 +10,8 @@ class NpmPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val extension = createExtension(project)
 
+        NpmExecutor.initNpmPath(project)
+
         // Register npm install and configuring it to be cached when possible
         project.tasks.register<NpmInstallTask>("npmInstall") {
             inputs.file(extension.packageJson.get())
@@ -45,6 +47,7 @@ class NpmPlugin : Plugin<Project> {
         extension.packageJson.convention(project.file("package.json"))
         extension.nodeModules.convention(project.file("node_modules"))
         extension.workingDir.convention(project.projectDir)
+        extension.npmPath.convention("npm")
         extension.defaultTaskGroup.convention("scripts")
         extension.includeAllScripts.convention(true)
         extension.taskDependingOnNpmInstall.convention(true)

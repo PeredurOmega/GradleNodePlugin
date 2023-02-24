@@ -5,7 +5,7 @@ plugins {
     kotlin("jvm") version "1.8.10"
 }
 
-version = "1.0.0"
+version = "1.0.5"
 group = "io.github.pereduromega"
 
 repositories {
@@ -17,6 +17,8 @@ repositories {
 dependencies {
     implementation("org.zeroturnaround:zt-exec:1.12")
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation(gradleApi())
+    implementation(kotlin("stdlib"))
 }
 
 gradlePlugin {
@@ -31,4 +33,16 @@ gradlePlugin {
             implementationClass = "NpmPlugin"
         }
     }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
