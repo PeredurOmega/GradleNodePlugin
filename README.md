@@ -9,13 +9,15 @@ Features:
 * Allows for further configuration of npm tasks
 * Properly kills npm processes when gradle is stopped
 
+**Java 11 or higher required**
+
 ## Usage
 
 ### Kotlin
 ```kotlin
 // Apply the plugin
 plugins {
-    id("io.github.pereduromega.npm.plugin") version "1.0.0"
+    id("io.github.pereduromega.npm.plugin") version "1.0.5"
 }
 
 // All possible configuration options with their default value
@@ -23,6 +25,7 @@ npm {
     packageJson.set(project.file("package.json"))
     nodeModules.set(project.file("node_modules"))
     workingDir.set(project.projectDir)
+    npmPath.set("npm")
     defaultTaskGroup.set("scripts")
     includeAllScripts.set(true)
     taskDependingOnNpmInstall.set(true)
@@ -59,7 +62,7 @@ task.configure {
 ```groovy
 // Apply the plugin
 plugins {
-    id 'io.github.pereduromega.npm.plugin' version '1.0.0'
+    id 'io.github.pereduromega.npm.plugin' version '1.0.5'
 }
 
 // All possible configuration options with their default value
@@ -67,6 +70,7 @@ npm {
     packageJson.set(project.file("package.json"))
     nodeModules.set(project.file("node_modules"))
     workingDir.set(project.projectDir)
+    npmPath.set("npm")
     defaultTaskGroup.set("scripts")
     includeAllScripts.set(true)
     taskDependingOnNpmInstall.set(true)
