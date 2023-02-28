@@ -1,4 +1,5 @@
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import java.io.File
 
 interface NpmPluginExtension {
@@ -8,5 +9,7 @@ interface NpmPluginExtension {
     val npmPath: Property<String>
     val includeAllScripts: Property<Boolean>
     val defaultTaskGroup: Property<String>
-    val taskDependingOnNpmInstall: Property<Boolean>
+    val tasksDependingOnNpmInstallByDefault: Property<Boolean>
+    val scriptsDependingOnNpmDevInstall: SetProperty<String>
+    val scriptsDependingOnNpmInstall: SetProperty<String>
 }

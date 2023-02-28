@@ -17,7 +17,7 @@ Features:
 ```kotlin
 // Apply the plugin
 plugins {
-    id("io.github.pereduromega.npm.plugin") version "1.0.5"
+    id("io.github.pereduromega.npm.plugin") version "1.1.2"
 }
 
 // All possible configuration options with their default value
@@ -29,10 +29,12 @@ npm {
     defaultTaskGroup.set("scripts")
     includeAllScripts.set(true)
     taskDependingOnNpmInstall.set(true)
+    scriptsDependingOnNpmDevInstall.set(listOf())
+    scriptsDependingOnNpmInstall.set(listOf())
 }
 
 // Example to further configure tasks extracted from scripts in package.json
-tasks.named("build") {
+tasks.named<NpmScriptTask>("build") {
     // Assign this task to a specific group (default is "scripts")
     group = BasePlugin.BUILD_GROUP
     
@@ -48,9 +50,12 @@ npm {
 
 val serviceProvider = project.gradle.sharedServices.registrations.getByName("npmService") as NpmService
 
-tasks.register<NpmScriptTask>("gradleTaskName", "npmCommand")
+val task = tasks.register<NpmScriptTask>("gradleTaskName", "npmCommand")
 task.configure {
-    dependsOn("npmInstall")
+    // Ensure dependencies are installed before running the task
+    requiresNpmInstall() // requiresNpmDevInstall() can be used to only install dev dependencies
+
+    // Assign a group to the task
     group = "npm"
     
     // Ensure that the process is properly destroyed when gradle is stopped
@@ -62,7 +67,7 @@ task.configure {
 ```groovy
 // Apply the plugin
 plugins {
-    id 'io.github.pereduromega.npm.plugin' version '1.0.5'
+    id 'io.github.pereduromega.npm.plugin' version '1.1.2'
 }
 
 // All possible configuration options with their default value
@@ -74,6 +79,8 @@ npm {
     defaultTaskGroup.set("scripts")
     includeAllScripts.set(true)
     taskDependingOnNpmInstall.set(true)
+    scriptsDependingOnNpmDevInstall.set(new ArrayList<>())
+    scriptsDependingOnNpmInstall.set(new ArrayList<>())
 }
 
 // Example to further configure tasks extracted from scripts in package.json
@@ -93,9 +100,12 @@ npm {
 
 NpmService serviceProvider = (NpmService) project.gradle.sharedServices.registrations.getByName("npmService")
 
-tasks.register("gradleTaskName", NpmScriptTask, "npmCommand")
+NpmScriptTask task = tasks.register("gradleTaskName", NpmScriptTask, "npmCommand")
 task.configure {
-    dependsOn("npmInstall")
+    // Ensure dependencies are installed before running the task
+    requiresNpmInstall() // requiresNpmDevInstall() can be used to only install dev dependencies
+    
+    // Assign a group to the task
     group = "npm"
     
     // Ensure that the process is properly destroyed when gradle is stopped
