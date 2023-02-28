@@ -5,7 +5,7 @@ plugins {
     kotlin("jvm") version "1.8.10"
 }
 
-version = "1.0.5"
+version = "1.1.2"
 group = "io.github.pereduromega"
 
 repositories {

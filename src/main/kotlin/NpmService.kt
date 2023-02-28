@@ -12,9 +12,9 @@ abstract class NpmService : BuildService<NpmService.Params>, AutoCloseable {
     private val processes = arrayListOf<Process>()
 
     fun executeCommand(command: String): Process {
-        val processBuilder = NpmExecutor.create("run", command)
-        processBuilder.directory(parameters.workingDir.get())
-        val process = processBuilder.start().process
+        val npmExecutor = NpmExecutor.create("run", command)
+        npmExecutor.directory(parameters.workingDir.get())
+        val process = npmExecutor.start().process
         processes.add(process)
         return process
     }
