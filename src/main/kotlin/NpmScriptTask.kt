@@ -9,6 +9,10 @@ abstract class NpmScriptTask @Inject constructor(@Input val command: String) : D
     @Internal
     abstract fun getNpmService(): Property<NpmService>
 
+    init {
+        description = "Run npm script '$command'"
+    }
+
     @TaskAction
     fun run() {
         val angular: NpmService = getNpmService().get()

@@ -2,7 +2,9 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.Directory
 import org.gradle.api.plugins.BasePlugin
+import org.gradle.internal.file.impl.DefaultFileMetadata.file
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.register
 import java.util.regex.Pattern
@@ -14,7 +16,7 @@ class NpmPlugin : Plugin<Project> {
         NpmExecutor.initNpmPath(project)
 
         // Register npm install and configuring it to be cached when possible
-        project.tasks.register<NpmInstallTask>("npmInstall") {
+        project.tasks.register<NpmInstallTask>(NpmInstallTask.NAME) {
             inputs.file(extension.packageJson.get())
             outputs.dir(extension.nodeModules.get())
             workingDir.convention(extension.workingDir.get())
@@ -31,19 +33,19 @@ class NpmPlugin : Plugin<Project> {
         }
 
         // Register the clean task to delete node_modules
-        project.tasks.register<NpmCleanTask>("clean") {
+        project.tasks.register<NpmCleanTask>(NpmCleanTask.NAME) {
             group = BasePlugin.CLEAN_TASK_NAME
             nodeModules.convention(extension.nodeModules.get())
         }
 
         // Register service to be able to launch and kill npm processes / subprocess
-        val serviceProvider = project.gradle.sharedServices.registerIfAbsent("npmService", NpmService::class.java) {
+        val serviceProvider = project.gradle.sharedServices.registerIfAbsent(NpmService.NAME, NpmService::class.java) {
             parameters.workingDir.set(extension.workingDir.get())
         }
 
         if (extension.includeAllScripts.get()) {
             // Read package json
-            val packageJsonTxt = extension.packageJson.get().readText()
+            val packageJsonTxt = extension.packageJson.get().asFile.readText()
             val packageJson = Gson().fromJson(packageJsonTxt, JsonObject::class.java)
             val scripts = packageJson.get("scripts").asJsonObject
 
@@ -65,9 +67,9 @@ class NpmPlugin : Plugin<Project> {
 
     private fun createExtension(project: Project): NpmPluginExtension {
         val extension = project.extensions.create<NpmPluginExtension>("npm")
-        extension.packageJson.convention(project.file("package.json"))
-        extension.nodeModules.convention(project.file("node_modules"))
-        extension.workingDir.convention(project.projectDir)
+        extension.packageJson.convention(project.layout.projectDirectory.file("package.json"))
+        extension.nodeModules.convention(project.layout.projectDirectory.dir("node_modules"))
+        extension.workingDir.convention(project.layout.projectDirectory)
         extension.npmPath.convention("npm")
         extension.defaultTaskGroup.convention("scripts")
         extension.includeAllScripts.convention(true)
