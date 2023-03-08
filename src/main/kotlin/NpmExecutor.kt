@@ -1,5 +1,6 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.kotlin.dsl.getByType
 import org.zeroturnaround.exec.ProcessExecutor
 
@@ -18,4 +19,7 @@ object NpmExecutor {
     }
 
     private fun osNpmPath(npmPath: String) = if (Os.isFamily(Os.FAMILY_WINDOWS)) "$npmPath.cmd" else npmPath
+
+    fun ProcessExecutor.workingDir(directory: DirectoryProperty): ProcessExecutor =
+        this.directory(directory.get().asFile)
 }

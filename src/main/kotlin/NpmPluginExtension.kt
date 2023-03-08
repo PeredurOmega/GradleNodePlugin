@@ -1,11 +1,12 @@
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
-import java.io.File
 
 interface NpmPluginExtension {
-    val packageJson: Property<File>
-    val nodeModules: Property<File>
-    val workingDir: Property<File>
+    val packageJson: RegularFileProperty
+    val nodeModules: DirectoryProperty
+    val workingDir: DirectoryProperty
     val npmPath: Property<String>
     val includeAllScripts: Property<Boolean>
     val defaultTaskGroup: Property<String>
