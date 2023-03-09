@@ -9,11 +9,13 @@ abstract class NpmScriptTask @Inject constructor(@Input val command: String) : D
     @Internal
     abstract fun getNpmService(): Property<NpmService>
 
-    @Suppress("MemberVisibilityCanBePrivate")
-    var ignoreExitValue = false
+    @get:Input
+    abstract val ignoreExitValue: Property<Boolean>
 
     init {
         description = "Run npm script '$command'"
+        @Suppress("LeakingThis")
+        ignoreExitValue.convention(false)
     }
 
     @TaskAction
@@ -23,7 +25,7 @@ abstract class NpmScriptTask @Inject constructor(@Input val command: String) : D
         process.waitFor()
         process.exitValue()
         @Suppress("MemberVisibilityCanBePrivate")
-        if (!ignoreExitValue && process.exitValue() != 0) {
+        if (!ignoreExitValue.get() && process.exitValue() != 0) {
             throw RuntimeException("Npm script '$command' failed")
         }
     }
