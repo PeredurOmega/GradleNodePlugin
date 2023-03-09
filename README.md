@@ -5,7 +5,7 @@ auto-extracted as gradle tasks.
 
 Features:
 
-* Can download and install node.js
+* Can download and install Node.js
 * Install npm dependencies with up-to-date checks
 * Detect scripts defined in package.json and create gradle tasks for them
 * Allows for further configuration of npm tasks
@@ -19,11 +19,12 @@ Features:
 
 ```kotlin
 
+import jdk.nashorn.internal.runtime.Debug.id
 import jdk.tools.jlink.resources.plugins
 
 // Apply the plugin
 plugins {
-    id("io.github.pereduromega.npm.plugin") version "1.2.3"
+    id("io.github.pereduromega.npm.plugin") version "1.2.4"
 }
 
 // When downloadNode is set to true you must provide a repository to download node
@@ -34,6 +35,8 @@ repositories {
             //...
         }
     }
+    // For the default repository, just use
+    nodeRepository()
 }
 
 // The configuration block npm is mandatory even if it is empty
@@ -91,7 +94,7 @@ task.configure {
 ```groovy
 // Apply the plugin
 plugins {
-    id 'io.github.pereduromega.npm.plugin' version '1.2.3'
+    id 'io.github.pereduromega.npm.plugin' version '1.2.4'
 }
 
 // When downloadNode is set to true you must provide a repository to download node
@@ -102,6 +105,8 @@ repositories {
             //...
         }
     }
+    // For the default repository, just use
+    nodeRepository()
 }
 
 // The configuration block npm is mandatory even if it is empty
