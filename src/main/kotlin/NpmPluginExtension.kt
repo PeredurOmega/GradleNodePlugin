@@ -7,10 +7,12 @@ interface NpmPluginExtension {
     val packageJson: RegularFileProperty
     val nodeModules: DirectoryProperty
     val workingDir: DirectoryProperty
-    val npmPath: Property<String>
-    val includeAllScripts: Property<Boolean>
     val defaultTaskGroup: Property<String>
+    val autoCreateTasksFromPackageJsonScripts: Property<Boolean>
     val tasksDependingOnNpmInstallByDefault: Property<Boolean>
     val scriptsDependingOnNpmDevInstall: SetProperty<String>
     val scriptsDependingOnNpmInstall: SetProperty<String>
+    val nodeVersion: Property<String>
+    val nodePath: Property<String>
+    val downloadNode: Property<Boolean>
 }
