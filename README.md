@@ -23,7 +23,7 @@ import jdk.tools.jlink.resources.plugins
 
 // Apply the plugin
 plugins {
-    id("io.github.pereduromega.npm.plugin") version "1.2.0"
+    id("io.github.pereduromega.npm.plugin") version "1.2.3"
 }
 
 // When downloadNode is set to true you must provide a repository to download node
@@ -78,7 +78,7 @@ task.configure {
     group = "npm"
 
     // Ignore exit value of the process (default false)
-    ignoreExitValue = true
+    ignoreExitValue.set(true)
 
     // Ensure that the process is properly destroyed when gradle is stopped
     getNpmService().set(serviceProvider)
@@ -91,7 +91,7 @@ task.configure {
 ```groovy
 // Apply the plugin
 plugins {
-    id 'io.github.pereduromega.npm.plugin' version '1.2.0'
+    id 'io.github.pereduromega.npm.plugin' version '1.2.3'
 }
 
 // When downloadNode is set to true you must provide a repository to download node
@@ -146,7 +146,7 @@ task.configure {
     group = 'npm'
 
     // Ignore exit value of the process (default false)
-    ignoreExitValue = true
+    ignoreExitValue.set(true)
 
     // Ensure that the process is properly destroyed when gradle is stopped
     getNpmService().set(serviceProvider)
