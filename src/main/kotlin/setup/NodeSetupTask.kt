@@ -38,12 +38,13 @@ abstract class NodeSetupTask : DefaultTask() {
         project.delete {
             delete(nodeDir)
         }
+        logger.debug("$nodeDir cleaned")
     }
 
     private fun unpackNodeArchive() {
         val archiveFile = nodeArchiveFile.get().asFile
         if (archiveFile.name.endsWith("zip")) copyNodeInstallContent(project.zipTree(archiveFile))
-        else {
+        else { // i.e. not windows
             copyNodeInstallContent(project.tarTree(archiveFile))
 
             // Fix broken symlink
@@ -53,10 +54,12 @@ abstract class NodeSetupTask : DefaultTask() {
     }
 
     private fun copyNodeInstallContent(archiveTree: FileTree) {
+        logger.debug("Extracting node archive: $archiveTree into $nodeDir")
         project.copy {
             from(archiveTree) {
                 eachFile {
                     relativePath = RelativePath(true, *relativePath.segments.drop(1).toTypedArray())
+                    logger.debug("Extracting file: $relativePath")
                 }
                 includeEmptyDirs = false
             }
@@ -64,19 +67,23 @@ abstract class NodeSetupTask : DefaultTask() {
         }
     }
 
+    // Unused on windows
     private fun fixBrokenSymlink(name: String) {
         val script = nodeDir.file("bin/$name").get().asFile.toPath()
         if (Files.deleteIfExists(script)) {
             val scriptDir = nodeDir.dir("lib/node_modules/npm/bin/$name-cli.js").get().asFile.toPath()
                 .relativize(nodeDir.file("bin").get().asFile.toPath())
             Files.createSymbolicLink(script, scriptDir)
+            logger.debug("Fixed broken symlink: $name")
         }
     }
 
+    // Unused on windows
     private fun setExecutableFlag() {
         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
             val nodeExec = nodeDir.file("bin/node").get().asFile
             nodeExec.setExecutable(true, false)
+            logger.debug("Set executable flag on $nodeExec")
         }
     }
 }

@@ -18,5 +18,10 @@ object NpmExecutor {
         return process
     }
 
-    private fun osNpmPath(nodeDir: String) = if (Os.isFamily(Os.FAMILY_WINDOWS)) "$nodeDir/npm.cmd" else "$nodeDir/npm"
+    private fun osNpmPath(nodeDir: String): String {
+        val isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
+        val npmName = if (isWindows) "npm.cmd" else "npm"
+        if (nodeDir.isBlank()) return npmName
+        return if (isWindows) "$nodeDir/$npmName" else "$nodeDir/bin/$npmName"
+    }
 }

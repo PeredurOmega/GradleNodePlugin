@@ -24,9 +24,12 @@ abstract class NpmScriptTask @Inject constructor(@Input val command: String) : D
         val process = angular.executeCommand(command)
         process.waitFor()
         process.exitValue()
-        @Suppress("MemberVisibilityCanBePrivate")
-        if (!ignoreExitValue.get() && process.exitValue() != 0) {
-            throw RuntimeException("Npm script '$command' failed")
+        if (process.exitValue() != 0) {
+            if (!ignoreExitValue.get()) {
+                throw RuntimeException("Npm script '$command' failed")
+            } else {
+                logger.warn("Npm script '$command' failed")
+            }
         }
     }
 }
