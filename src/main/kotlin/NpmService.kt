@@ -1,3 +1,6 @@
+import NpmExecutor.createProcess
+import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
@@ -14,8 +17,8 @@ abstract class NpmService : BuildService<NpmService.Params>, AutoCloseable {
 
     private val processes = arrayListOf<Process>()
 
-    fun executeCommand(command: String): Process {
-        val npmExecutor = NpmExecutor.create("run", command)
+    fun executeCommand(task: Task, command: String): Process {
+        val npmExecutor = task.createProcess("run", command)
         npmExecutor.directory(parameters.workingDir.get().asFile)
         val process = npmExecutor.start().process
         processes.add(process)

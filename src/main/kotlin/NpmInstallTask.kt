@@ -1,3 +1,4 @@
+import NpmExecutor.createProcess
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
@@ -31,7 +32,7 @@ abstract class NpmInstallTask : DefaultTask() {
     @TaskAction
     fun run() {
         val workingDir = packageJson.get().asFile.parentFile
-        val executor = NpmExecutor.create("install", *args.get().toTypedArray()).directory(workingDir).start()
+        val executor = createProcess("install", *args.get().toTypedArray()).directory(workingDir).start()
         val process = executor.process
         process.waitFor()
         if (process.exitValue() != 0) {
@@ -40,6 +41,8 @@ abstract class NpmInstallTask : DefaultTask() {
             } else {
                 logger.warn("Npm install failed with exit value ${process.exitValue()}")
             }
+        } else {
+            logger.info("Npm install completed successfully")
         }
     }
 }
