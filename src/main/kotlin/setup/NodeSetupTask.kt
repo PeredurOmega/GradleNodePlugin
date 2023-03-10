@@ -10,7 +10,6 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.nio.file.Files
-import kotlin.io.path.absolute
 
 abstract class NodeSetupTask : DefaultTask() {
 
@@ -70,11 +69,13 @@ abstract class NodeSetupTask : DefaultTask() {
 
     // Unused on windows
     private fun fixBrokenSymlink(name: String) {
-        val script = nodeDir.file("bin/$name").get().asFile.toPath()
-        if (Files.deleteIfExists(script)) {
-            val scriptDir = nodeDir.dir("lib/node_modules/npm/bin/$name-cli.js").get().asFile.toPath().absolute()
-            Files.createSymbolicLink(script, scriptDir)
-            logger.debug("Fixed broken symlink: $name")
+        val binPath = nodeDir.dir("bin").get().asFile.toPath()
+        val scriptPath = binPath.resolve(name)
+        if (Files.deleteIfExists(scriptPath)) {
+            val targetPath = nodeDir.dir("lib/node_modules/npm/bin/$name-cli.js").get().asFile.toPath()
+            val fixedScriptPath = binPath.relativize(targetPath)
+            Files.createSymbolicLink(scriptPath, fixedScriptPath)
+            logger.debug("Fixed broken symlink: $name with target $fixedScriptPath")
         }
     }
 

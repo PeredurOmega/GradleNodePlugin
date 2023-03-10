@@ -50,8 +50,6 @@ class NpmPlugin : Plugin<Project> {
 
             configureNodeSetupTask(project, extension)
 
-            NpmExecutor.initNpmPath(project)
-
             // Register npm install and configuring it to be cached when possible
             project.tasks.register<NpmInstallTask>(NpmInstallTask.NAME) {
                 dependsOn(NodeSetupTask.NAME)
