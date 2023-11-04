@@ -53,6 +53,8 @@ npm {
     nodeVersion.set("18.15.0")
     nodePath.set("")
     downloadNode.set(true)
+    verbose.set(true)
+    packageManager.set(PackageManager.NPM)
 }
 
 // Example to further configure tasks extracted from scripts in package.json
@@ -123,6 +125,8 @@ npm {
     nodeVersion.set('18.15.0')
     nodePath.set('')
     downloadNode.set(true)
+    verbose.set(true)
+    packageManager.set(PackageManager.NPM)
 }
 
 // Example to further configure tasks extracted from scripts in package.json

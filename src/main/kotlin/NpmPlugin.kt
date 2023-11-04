@@ -9,6 +9,7 @@ import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 import setup.NodeSetupTask
+import setup.PackageManagerSetupTask
 import setup.PlatformHelper
 import java.io.File
 import java.util.regex.Pattern
@@ -36,6 +37,7 @@ class NpmPlugin : Plugin<Project> {
         extension.scriptsDependingOnNpmInstall.convention(hashSetOf())
         extension.nodeVersion.convention("18.15.0")
         extension.nodePath.convention("")
+        extension.verbose.convention(true)
         extension.downloadNode.convention(true)
         return extension
     }
@@ -50,19 +52,25 @@ class NpmPlugin : Plugin<Project> {
 
             configureNodeSetupTask(project, extension)
 
+            // Read package json
+            val packageJsonTxt = extension.packageJson.get().asFile.readText()
+            val packageJson = Gson().fromJson(packageJsonTxt, JsonObject::class.java)
+
+            configurePackageManagerSetupTask(project, extension, packageJson)
+
             // Register npm install and configuring it to be cached when possible
             project.tasks.register<NpmInstallTask>(NpmInstallTask.NAME) {
-                dependsOn(NodeSetupTask.NAME)
+                dependsOn(PackageManagerSetupTask.NAME)
                 inputs.file(extension.packageJson)
                 outputs.dir(extension.nodeModules)
-                packageJson.convention(extension.packageJson)
+                this.packageJson.convention(extension.packageJson)
                 group = extension.defaultTaskGroup.get()
             }
 
             // Register npm install dev and configuring it to be cached when possible
             project.tasks.register<NpmInstallTask>("npmDevInstall") {
-                dependsOn(NodeSetupTask.NAME)
-                packageJson.convention(extension.packageJson)
+                dependsOn(PackageManagerSetupTask.NAME)
+                this.packageJson.convention(extension.packageJson)
                 outputs.dir { extension.nodeModules.get() }
                 args.convention(listOf("--only=dev"))
                 group = extension.defaultTaskGroup.get()
@@ -76,16 +84,12 @@ class NpmPlugin : Plugin<Project> {
 
             // Register service to be able to launch and kill npm processes / subprocess
             val serviceProvider =
-                project.gradle.sharedServices.registerIfAbsent(NpmService.NAME, NpmService::class.java) {
-                    parameters.workingDir.convention(extension.workingDir)
-                }
-
-            // Read package json
-            val packageJsonTxt = extension.packageJson.get().asFile.readText()
-            val packageJson = Gson().fromJson(packageJsonTxt, JsonObject::class.java)
-            val scripts = packageJson.get("scripts").asJsonObject
+                    project.gradle.sharedServices.registerIfAbsent(NpmService.NAME, NpmService::class.java) {
+                        parameters.workingDir.convention(extension.workingDir)
+                    }
 
             // Register package.json scripts as gradle tasks
+            val scripts = packageJson.get("scripts").asJsonObject
             scripts.keySet().forEach { command ->
                 val taskName = command.toGradleName()
                 val task = project.tasks.register<NpmScriptTask>(taskName, command)
@@ -111,6 +115,29 @@ class NpmPlugin : Plugin<Project> {
                         nodeArchiveFile.convention(this@afterEvaluate.layout.file(nodeArchive))
                         nodeDir.convention(this@afterEvaluate.layout.dir(extension.nodePath.map { File(it) }))
                     }
+                }
+            }
+        }
+
+        private fun configurePackageManagerSetupTask(project: Project, extension: NpmPluginExtension, packageJson: JsonObject) {
+            var extractedPackageManager = ""
+            if (!extension.packageManager.isPresent) {
+                extractedPackageManager = if (packageJson.has("packageManager")) packageJson.get("packageManager").asString else "npm"
+                extension.packageManager.convention(PackageManager.fromString(extractedPackageManager))
+            }
+
+            project.tasks.register<PackageManagerSetupTask>(PackageManagerSetupTask.NAME) {
+                onlyIf { packageManager.get() != PackageManager.NPM }
+                dependsOn(NodeSetupTask.NAME)
+                packageManager.convention(extension.packageManager)
+                group = extension.defaultTaskGroup.get()
+            }
+
+            project.afterEvaluate {
+                tasks.named<PackageManagerSetupTask>(PackageManagerSetupTask.NAME) {
+                    if (extractedPackageManager.isNotBlank()) packageManagerWithVersion.convention(extractedPackageManager)
+                    packageManager.convention(extension.packageManager)
+                    nodeDir.convention(this@afterEvaluate.layout.dir(extension.nodePath.map { File(it) }))
                 }
             }
         }
