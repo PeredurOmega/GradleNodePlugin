@@ -38,7 +38,7 @@ abstract class NodeSetupTask : DefaultTask() {
         project.delete {
             delete(nodeDir)
         }
-        logger.debug("$nodeDir cleaned")
+        logger.debug("{} cleaned", nodeDir)
     }
 
     private fun unpackNodeArchive() {
@@ -54,12 +54,12 @@ abstract class NodeSetupTask : DefaultTask() {
     }
 
     private fun copyNodeInstallContent(archiveTree: FileTree) {
-        logger.debug("Extracting node archive: $archiveTree into $nodeDir")
+        logger.debug("Extracting node archive: {} into {}", archiveTree, nodeDir)
         project.copy {
             from(archiveTree) {
                 eachFile {
                     relativePath = RelativePath(true, *relativePath.segments.drop(1).toTypedArray())
-                    logger.debug("Extracting file: $relativePath")
+                    logger.debug("Extracting file: {}", relativePath)
                 }
                 includeEmptyDirs = false
             }
@@ -75,7 +75,7 @@ abstract class NodeSetupTask : DefaultTask() {
             val targetPath = nodeDir.dir("lib/node_modules/npm/bin/$name-cli.js").get().asFile.toPath()
             val fixedScriptPath = binPath.relativize(targetPath)
             Files.createSymbolicLink(scriptPath, fixedScriptPath)
-            logger.debug("Fixed broken symlink: $name with target $fixedScriptPath")
+            logger.debug("Fixed broken symlink: {} with target {}", name, fixedScriptPath)
         }
     }
 
@@ -84,7 +84,7 @@ abstract class NodeSetupTask : DefaultTask() {
         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
             val nodeExec = nodeDir.file("bin/node").get().asFile
             nodeExec.setExecutable(true, false)
-            logger.debug("Set executable flag on $nodeExec")
+            logger.debug("Set executable flag on {}", nodeExec)
         }
     }
 }

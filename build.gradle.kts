@@ -2,11 +2,11 @@ plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
     signing
-    id("com.gradle.plugin-publish") version "1.1.0"
-    kotlin("jvm") version "1.8.10"
+    id("com.gradle.plugin-publish") version "1.2.1"
+    kotlin("jvm") version "1.9.20"
 }
 
-version = "1.3.0"
+version = "1.4.1-alpha9"
 group = "io.github.pereduromega"
 description = "Simple way to use npm scripts from gradle with scripts defined in package.json being auto-extracted as gradle tasks"
 

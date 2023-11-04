@@ -7,17 +7,20 @@ import java.io.File
 
 object NpmExecutor {
 
-    fun Task.createProcess(vararg commands: String): ProcessExecutor {
-        val nodePath = project.extensions.getByType<NpmPluginExtension>().nodePath.get()
+    fun Task.createProcess(packageManager: PackageManager, vararg commands: String): ProcessExecutor {
+        val extensions = project.extensions.getByType<NpmPluginExtension>()
+        val nodePath = extensions.nodePath.get()
 
         val isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
-        var npm = if (isWindows) "npm.cmd" else "npm"
         var setEnvPath = false
+        var executorPath = packageManager.toString()
         if (nodePath.isNotBlank()) {
-            npm = if (isWindows) "$nodePath/$npm" else "$nodePath/bin/$npm"
+            executorPath = if (isWindows) "$nodePath/$packageManager.cmd" else "$nodePath/bin/$packageManager"
             setEnvPath = true
         }
-        val process = ProcessExecutor(npm, *commands)
+
+        logger.lifecycle("Executing: {}", listOf(executorPath, *commands).joinToString(" "))
+        val process = ProcessExecutor(executorPath, *commands)
 
         if (setEnvPath) {
             val env = mutableMapOf<String, String>()
@@ -28,8 +31,8 @@ object NpmExecutor {
             process.environment(env)
             logger.debug("Setting process env PATH to ${env["PATH"]}")
         }
-
-        process.redirectOutput(Slf4jStream.of(logger).asInfo())
+        val outputStream = if (extensions.verbose.get()) LifecycleLoggerStream.of(logger) else Slf4jStream.of(logger).asInfo()
+        process.redirectOutput(outputStream)
         process.redirectError(Slf4jStream.of(logger).asError())
 
         return process

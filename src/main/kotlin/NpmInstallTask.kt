@@ -6,6 +6,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.kotlin.dsl.getByType
 
 @Suppress("LeakingThis")
 abstract class NpmInstallTask : DefaultTask() {
@@ -32,7 +33,8 @@ abstract class NpmInstallTask : DefaultTask() {
     @TaskAction
     fun run() {
         val workingDir = packageJson.get().asFile.parentFile
-        val executor = createProcess("install", *args.get().toTypedArray()).directory(workingDir).start()
+        val packageManager = project.extensions.getByType<NpmPluginExtension>().packageManager.get()
+        val executor = createProcess(packageManager, "install", *args.get().toTypedArray()).directory(workingDir).start()
         val process = executor.process
         process.waitFor()
         if (process.exitValue() != 0) {

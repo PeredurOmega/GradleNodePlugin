@@ -17,8 +17,8 @@ abstract class NpmService : BuildService<NpmService.Params>, AutoCloseable {
 
     private val processes = arrayListOf<Process>()
 
-    fun executeCommand(task: Task, command: String): Process {
-        val npmExecutor = task.createProcess("run", command)
+    fun executeCommand(task: Task, packageManager: PackageManager, command: String): Process {
+        val npmExecutor = task.createProcess(packageManager, "run", command)
         npmExecutor.directory(parameters.workingDir.get().asFile)
         val process = npmExecutor.start().process
         processes.add(process)

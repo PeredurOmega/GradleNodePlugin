@@ -3,6 +3,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
+import org.gradle.kotlin.dsl.getByType
 import javax.inject.Inject
 
 abstract class NpmScriptTask @Inject constructor(@Input val command: String) : DefaultTask() {
@@ -20,8 +21,9 @@ abstract class NpmScriptTask @Inject constructor(@Input val command: String) : D
 
     @TaskAction
     fun run() {
-        val angular = getNpmService().get()
-        val process = angular.executeCommand(this, command)
+        val npmService = getNpmService().get()
+        val packageManager = project.extensions.getByType<NpmPluginExtension>().packageManager.get()
+        val process = npmService.executeCommand(this, packageManager, command)
         process.waitFor()
         if (process.exitValue() != 0) {
             if (!ignoreExitValue.get()) {

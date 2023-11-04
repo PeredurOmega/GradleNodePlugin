@@ -15,4 +15,6 @@ interface NpmPluginExtension {
     val nodeVersion: Property<String>
     val nodePath: Property<String>
     val downloadNode: Property<Boolean>
+    val verbose: Property<Boolean>
+    val packageManager: Property<PackageManager>
 }
