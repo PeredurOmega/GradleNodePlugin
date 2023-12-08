@@ -5,14 +5,14 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.api.artifacts.repositories.AuthenticationSupported
 
-fun Project.npm(configure: Action<NpmPluginExtension>) {
-    extensions.configure("npm", configure)
-    NpmPlugin.registerTasks(this)
+fun Project.node(configure: Action<NodePluginExtension>) {
+    extensions.configure("node", configure)
+    NodePlugin.registerTasks(this)
 }
 
-fun NpmScriptTask.requiresNpmDevInstall() = dependsOn("npmDevInstall")
+fun NodeScriptTask.requiresDevDependencyInstall() = dependsOn(DependenciesInstallTask.DEV_NAME)
 
-fun NpmScriptTask.requiresNpmInstall() = dependsOn("npmInstall")
+fun NodeScriptTask.requiresDependencyInstall() = dependsOn(DependenciesInstallTask.NAME)
 
 fun RepositoryHandler.nodeRepository(
     url: String = "https://nodejs.org/dist/",

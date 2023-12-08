@@ -3,7 +3,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.TaskAction
 
-abstract class NpmCleanTask : DefaultTask() {
+abstract class NodeCleanTask : DefaultTask() {
 
     companion object {
         const val NAME = "clean"

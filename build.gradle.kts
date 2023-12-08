@@ -3,10 +3,10 @@ plugins {
     `java-gradle-plugin`
     signing
     id("com.gradle.plugin-publish") version "1.2.1"
-    kotlin("jvm") version "1.9.20"
+    kotlin("jvm") version "1.9.21"
 }
 
-version = "1.4.1-alpha9"
+version = "1.4.2"
 group = "io.github.pereduromega"
 description = "Simple way to use npm scripts from gradle with scripts defined in package.json being auto-extracted as gradle tasks"
 
@@ -29,10 +29,10 @@ gradlePlugin {
     plugins {
         create("io.github.pereduromega.npm.plugin") {
             id = "io.github.pereduromega.npm.plugin"
-            displayName = "Npm Plugin"
+            displayName = "Node Plugin"
             description = "Simple way to use npm scripts from gradle with scripts defined in package.json being auto-extracted as gradle tasks"
             tags.set(listOf("npm", "package.json", "scripts"))
-            implementationClass = "NpmPlugin"
+            implementationClass = "NodePlugin"
         }
     }
 }
