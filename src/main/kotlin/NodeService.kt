@@ -1,14 +1,21 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Task
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.services.BuildService
+import org.gradle.api.services.BuildServiceParameters
 import org.gradle.kotlin.dsl.getByType
 import org.zeroturnaround.exec.ProcessExecutor
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
 import java.io.File
 
-object NpmExecutor {
+abstract class NodeService : BuildService<NodeService.Params>, AutoCloseable {
 
-    fun Task.createProcess(packageManager: PackageManager, vararg commands: String): ProcessExecutor {
-        val extensions = project.extensions.getByType<NpmPluginExtension>()
+    companion object {
+        const val NAME = "nodeService"
+    }
+
+    private fun Task.createProcess(packageManager: PackageManager, vararg commands: String): ProcessExecutor {
+        val extensions = project.extensions.getByType<NodePluginExtension>()
         val nodePath = extensions.nodePath.get()
 
         val isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
@@ -36,5 +43,35 @@ object NpmExecutor {
         process.redirectError(Slf4jStream.of(logger).asError())
 
         return process
+    }
+
+    internal interface Params : BuildServiceParameters {
+        val workingDir: DirectoryProperty
+    }
+
+    private val processes = arrayListOf<Process>()
+
+    fun executeCommand(task: Task, packageManager: PackageManager, vararg command: String): Process {
+        val nodeExecutor = task.createProcess(packageManager, *command)
+        /*workingDir?.let {
+            nodeExecutor.directory(it)
+        }*/
+        nodeExecutor.directory(parameters.workingDir.get().asFile)
+        val process = nodeExecutor.start().process
+        processes.add(process)
+        return process
+    }
+
+    override fun close() {
+        processes.kill()
+    }
+
+    private fun ArrayList<Process>.kill() {
+        forEach {
+            it.descendants().forEach { p ->
+                p.destroy()
+            }
+            if (it.isAlive) it.destroy()
+        }
     }
 }

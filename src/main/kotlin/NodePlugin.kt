@@ -14,27 +14,27 @@ import setup.PlatformHelper
 import java.io.File
 import java.util.regex.Pattern
 
-class NpmPlugin : Plugin<Project> {
+class NodePlugin : Plugin<Project> {
     override fun apply(project: Project) {
         createExtension(project)
 
         project.afterEvaluate {
-            if (project.tasks.findByName("npmInstall") == null) {
-                throw Exception("NpmPlugin must be configured using npm {} block")
+            if (project.tasks.findByName("installDependencies") == null) {
+                throw Exception("NodePlugin must be configured using node {} block")
             }
         }
     }
 
-    private fun createExtension(project: Project): NpmPluginExtension {
-        val extension = project.extensions.create<NpmPluginExtension>("npm")
+    private fun createExtension(project: Project): NodePluginExtension {
+        val extension = project.extensions.create<NodePluginExtension>("node")
         extension.packageJson.convention(project.layout.projectDirectory.file("package.json"))
         extension.nodeModules.convention(project.layout.projectDirectory.dir("node_modules"))
         extension.workingDir.convention(project.layout.projectDirectory)
         extension.defaultTaskGroup.convention("scripts")
         extension.autoCreateTasksFromPackageJsonScripts.convention(true)
-        extension.tasksDependingOnNpmInstallByDefault.convention(true)
-        extension.scriptsDependingOnNpmDevInstall.convention(hashSetOf())
-        extension.scriptsDependingOnNpmInstall.convention(hashSetOf())
+        extension.tasksDependingOnNodeInstallByDefault.convention(true)
+        extension.scriptsDependingOnNodeDevInstall.convention(hashSetOf())
+        extension.scriptsDependingOnNodeInstall.convention(hashSetOf())
         extension.nodeVersion.convention("18.15.0")
         extension.nodePath.convention("")
         extension.verbose.convention(true)
@@ -44,7 +44,7 @@ class NpmPlugin : Plugin<Project> {
 
     companion object {
         fun registerTasks(project: Project) {
-            val extension = project.extensions.getByType<NpmPluginExtension>()
+            val extension = project.extensions.getByType<NodePluginExtension>()
 
             if (extension.downloadNode.get() && extension.nodePath.get().isBlank()) {
                 extension.nodePath.convention(project.layout.buildDirectory.dir("node").get().asFile.absolutePath)
@@ -52,59 +52,61 @@ class NpmPlugin : Plugin<Project> {
 
             configureNodeSetupTask(project, extension)
 
+            // Register service to be able to launch and kill npm processes / subprocess
+            val serviceProvider =
+                    project.gradle.sharedServices.registerIfAbsent(NodeService.NAME, NodeService::class.java) {
+                        parameters.workingDir.convention(extension.workingDir)
+                    }
+
             // Read package json
             val packageJsonTxt = extension.packageJson.get().asFile.readText()
             val packageJson = Gson().fromJson(packageJsonTxt, JsonObject::class.java)
 
-            configurePackageManagerSetupTask(project, extension, packageJson)
+            configurePackageManagerSetupTask(project, extension, serviceProvider, packageJson)
 
-            // Register npm install and configuring it to be cached when possible
-            project.tasks.register<NpmInstallTask>(NpmInstallTask.NAME) {
+            // Register dependencies installation and configuring it to be cached when possible
+            project.tasks.register<DependenciesInstallTask>(DependenciesInstallTask.NAME) {
                 dependsOn(PackageManagerSetupTask.NAME)
                 inputs.file(extension.packageJson)
                 outputs.dir(extension.nodeModules)
                 this.packageJson.convention(extension.packageJson)
                 group = extension.defaultTaskGroup.get()
+                getNodeService().convention(serviceProvider)
             }
 
-            // Register npm install dev and configuring it to be cached when possible
-            project.tasks.register<NpmInstallTask>("npmDevInstall") {
+            // Register dependencies installation dev and configuring it to be cached when possible
+            project.tasks.register<DependenciesInstallTask>(DependenciesInstallTask.DEV_NAME) {
                 dependsOn(PackageManagerSetupTask.NAME)
                 this.packageJson.convention(extension.packageJson)
                 outputs.dir { extension.nodeModules.get() }
                 args.convention(listOf("--only=dev"))
                 group = extension.defaultTaskGroup.get()
+                getNodeService().convention(serviceProvider)
             }
 
             // Register the clean task to delete node_modules
-            project.tasks.register<NpmCleanTask>(NpmCleanTask.NAME) {
+            project.tasks.register<NodeCleanTask>(NodeCleanTask.NAME) {
                 group = BasePlugin.CLEAN_TASK_NAME
                 nodeModules.convention(extension.nodeModules)
             }
-
-            // Register service to be able to launch and kill npm processes / subprocess
-            val serviceProvider =
-                    project.gradle.sharedServices.registerIfAbsent(NpmService.NAME, NpmService::class.java) {
-                        parameters.workingDir.convention(extension.workingDir)
-                    }
 
             // Register package.json scripts as gradle tasks
             val scripts = packageJson.get("scripts").asJsonObject
             scripts.keySet().forEach { command ->
                 val taskName = command.toGradleName()
-                val task = project.tasks.register<NpmScriptTask>(taskName, command)
+                val task = project.tasks.register<NodeScriptTask>(taskName, command)
                 task.configure {
-                    if (extension.scriptsDependingOnNpmDevInstall.get().contains(taskName)) requiresNpmDevInstall()
-                    else if (extension.scriptsDependingOnNpmInstall.get().contains(taskName)) requiresNpmInstall()
-                    else if (extension.tasksDependingOnNpmInstallByDefault.get()) requiresNpmInstall()
+                    if (extension.scriptsDependingOnNodeDevInstall.get().contains(taskName)) requiresDevDependencyInstall()
+                    else if (extension.scriptsDependingOnNodeInstall.get().contains(taskName)) requiresDependencyInstall()
+                    else if (extension.tasksDependingOnNodeInstallByDefault.get()) requiresDependencyInstall()
                     group = extension.defaultTaskGroup.get()
-                    getNpmService().convention(serviceProvider)
+                    getNodeService().convention(serviceProvider)
                     usesService(serviceProvider)
                 }
             }
         }
 
-        private fun configureNodeSetupTask(project: Project, extension: NpmPluginExtension) {
+        private fun configureNodeSetupTask(project: Project, extension: NodePluginExtension) {
             project.tasks.register<NodeSetupTask>(NodeSetupTask.NAME) {
                 onlyIf { extension.downloadNode.get() }
             }
@@ -119,7 +121,7 @@ class NpmPlugin : Plugin<Project> {
             }
         }
 
-        private fun configurePackageManagerSetupTask(project: Project, extension: NpmPluginExtension, packageJson: JsonObject) {
+        private fun configurePackageManagerSetupTask(project: Project, extension: NodePluginExtension, nodeService: Provider<NodeService>, packageJson: JsonObject) {
             var extractedPackageManager = ""
             if (!extension.packageManager.isPresent) {
                 extractedPackageManager = if (packageJson.has("packageManager")) packageJson.get("packageManager").asString else "npm"
@@ -131,6 +133,7 @@ class NpmPlugin : Plugin<Project> {
                 dependsOn(NodeSetupTask.NAME)
                 packageManager.convention(extension.packageManager)
                 group = extension.defaultTaskGroup.get()
+                getNodeService().convention(nodeService)
             }
 
             project.afterEvaluate {
@@ -142,7 +145,7 @@ class NpmPlugin : Plugin<Project> {
             }
         }
 
-        private fun computeNodeArchiveDependency(nodeExtension: NpmPluginExtension): Provider<String> {
+        private fun computeNodeArchiveDependency(nodeExtension: NodePluginExtension): Provider<String> {
             val platformHelper = PlatformHelper()
             val osName = platformHelper.getOsPrefix()
             val osArch = platformHelper.getArch()
