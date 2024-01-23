@@ -6,7 +6,7 @@ plugins {
     kotlin("jvm") version "1.9.22"
 }
 
-version = "2.0.0"
+version = "2.0.1"
 group = "io.github.pereduromega"
 description = "Simple way to use node scripts (npm, yarn, pnpm) from gradle with scripts defined in package.json being auto-extracted as gradle tasks"
 
