@@ -1,4 +1,5 @@
 import org.gradle.api.DefaultTask
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
@@ -13,17 +14,21 @@ abstract class NodeScriptTask @Inject constructor(@Input val command: String) : 
     @get:Input
     abstract val ignoreExitValue: Property<Boolean>
 
+    @get:Input
+    abstract val args: ListProperty<String>
+
     init {
         description = "Run node script '$command'"
         @Suppress("LeakingThis")
         ignoreExitValue.convention(false)
+        args.convention(listOf())
     }
 
     @TaskAction
     fun run() {
         val nodeService = getNodeService().get()
         val packageManager = project.extensions.getByType<NodePluginExtension>().packageManager.get()
-        val process = nodeService.executeCommand(this, packageManager, "run", command)
+        val process = nodeService.executeCommand(this, packageManager, "run", command, *args.get().toTypedArray())
         process.waitFor()
         if (process.exitValue() != 0) {
             if (!ignoreExitValue.get()) {
