@@ -1,5 +1,6 @@
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import nu.studer.gradle.credentials.CredentialsPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.BasePlugin
@@ -16,6 +17,7 @@ import java.util.regex.Pattern
 
 class NodePlugin : Plugin<Project> {
     override fun apply(project: Project) {
+        project.plugins.apply(CredentialsPlugin::class.java)
         createExtension(project)
 
         project.afterEvaluate {
@@ -35,7 +37,7 @@ class NodePlugin : Plugin<Project> {
         extension.tasksDependingOnNodeInstallByDefault.convention(true)
         extension.scriptsDependingOnNodeDevInstall.convention(hashSetOf())
         extension.scriptsDependingOnNodeInstall.convention(hashSetOf())
-        extension.nodeVersion.convention("18.15.0")
+        extension.nodeVersion.convention("18.19.0")
         extension.nodePath.convention("")
         extension.verbose.convention(true)
         extension.downloadNode.convention(true)
@@ -52,7 +54,7 @@ class NodePlugin : Plugin<Project> {
 
             configureNodeSetupTask(project, extension)
 
-            // Register service to be able to launch and kill npm processes / subprocess
+            // Register service to be able to launch and kill node processes / subprocess
             val serviceProvider =
                     project.gradle.sharedServices.registerIfAbsent(NodeService.NAME, NodeService::class.java) {
                         parameters.workingDir.convention(extension.workingDir)
@@ -92,16 +94,19 @@ class NodePlugin : Plugin<Project> {
 
             // Register package.json scripts as gradle tasks
             val scripts = packageJson.get("scripts").asJsonObject
-            scripts.keySet().forEach { command ->
-                val taskName = command.toGradleName()
-                val task = project.tasks.register<NodeScriptTask>(taskName, command)
-                task.configure {
+            scripts.keySet().forEach { scriptName ->
+                val taskName = scriptName.toGradleName()
+                project.tasks.register<NodeScriptTask>(taskName) {
                     if (extension.scriptsDependingOnNodeDevInstall.get().contains(taskName)) requiresDevDependencyInstall()
                     else if (extension.scriptsDependingOnNodeInstall.get().contains(taskName)) requiresDependencyInstall()
                     else if (extension.tasksDependingOnNodeInstallByDefault.get()) requiresDependencyInstall()
                     group = extension.defaultTaskGroup.get()
                     getNodeService().convention(serviceProvider)
                     usesService(serviceProvider)
+                    packageManager.convention(extension.packageManager.get())
+                    ignoreExitValue.convention(false)
+                    command.convention("run")
+                    args.convention(scriptName)
                 }
             }
         }
