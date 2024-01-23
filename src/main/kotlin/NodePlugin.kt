@@ -37,6 +37,7 @@ class NodePlugin : Plugin<Project> {
         extension.tasksDependingOnNodeInstallByDefault.convention(true)
         extension.scriptsDependingOnNodeDevInstall.convention(hashSetOf())
         extension.scriptsDependingOnNodeInstall.convention(hashSetOf())
+        extension.installCommand.convention("install")
         extension.nodeVersion.convention("18.19.0")
         extension.nodePath.convention("")
         extension.verbose.convention(true)
