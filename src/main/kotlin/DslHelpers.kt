@@ -1,5 +1,7 @@
 @file:Suppress("unused")
 
+import nu.studer.gradle.credentials.CredentialsPlugin.CREDENTIALS_CONTAINER_PROPERTY
+import nu.studer.gradle.credentials.domain.CredentialsContainer
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.dsl.RepositoryHandler
@@ -33,3 +35,6 @@ fun RepositoryHandler.nodeRepository(
         auth.execute(this)
     }
 }
+
+val Project.credentials : CredentialsContainer
+    get() = extensions.extraProperties.get(CREDENTIALS_CONTAINER_PROPERTY) as CredentialsContainer
