@@ -12,6 +12,7 @@ interface NodePluginExtension {
     val tasksDependingOnNodeInstallByDefault: Property<Boolean>
     val scriptsDependingOnNodeDevInstall: SetProperty<String>
     val scriptsDependingOnNodeInstall: SetProperty<String>
+    val installCommand: Property<String>
     val nodeVersion: Property<String>
     val nodePath: Property<String>
     val downloadNode: Property<Boolean>
