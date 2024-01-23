@@ -1,15 +1,23 @@
-# NpmPlugin for Gradle
+# Node Plugin for Gradle
 
-Plugin aiming to provide a simple way to use npm scripts from gradle with scripts defined in package.json being
-auto-extracted as gradle tasks.
+> 📣 &nbsp;&nbsp;**Announcement:** This plugin changed name and artifact starting from **2.0.0** to better 
+> reflect its purpose. The old name was `io.github.pereduromega.npm.plugin` and the new one is 
+> `io.github.pereduromega.node.plugin`. This change has been made to reflect the fact that this plugin is not only for
+> npm anymore but also other package managers (such as yarn and pnpm). In a similar way all tasks now reflect this
+> change. Please refer on the documentation below for more info on how to use this new version.
 
-Features:
+Plugin aiming to provide a simple way to use node scripts (npm, yarn, pnpm) from gradle with scripts defined in
+package.json being auto-extracted as gradle tasks.
+
+**Features:**
 
 * Can download and install Node.js
-* Install npm dependencies with up-to-date checks
+* Download and handle npm, yarn and pnpm
+* Install package.json dependencies with up-to-date checks
 * Detect scripts defined in package.json and create gradle tasks for them
-* Allows for further configuration of npm tasks
-* Properly kills npm processes when gradle is stopped
+* Allows for further configuration of node tasks
+* Properly kills node processes when gradle is stopped
+* Provide a way to configure .npmrc file with specific properties (and credentials encryptions)
 
 **Java 11 or higher required**
 
@@ -24,7 +32,7 @@ import jdk.tools.jlink.resources.plugins
 
 // Apply the plugin
 plugins {
-    id("io.github.pereduromega.npm.plugin") version "1.3.0"
+    id("io.github.pereduromega.node.plugin") version "2.0.0"
 }
 
 // When downloadNode is set to true you must provide a repository to download node
@@ -39,18 +47,18 @@ repositories {
     nodeRepository()
 }
 
-// The configuration block npm is mandatory even if it is empty
-npm {
+// The configuration block node is mandatory even if it is empty
+node {
     // All possible configuration options with their default value are shown below
     packageJson.set(project.file("package.json"))
     nodeModules.set(project.file("node_modules"))
     workingDir.set(project.projectDir)
     defaultTaskGroup.set("scripts")
     autoCreateTasksFromPackageJsonScripts.set(true)
-    taskDependingOnNpmInstall.set(true)
-    scriptsDependingOnNpmDevInstall.set(listOf())
-    scriptsDependingOnNpmInstall.set(listOf())
-    nodeVersion.set("18.15.0")
+    tasksDependingOnNodeInstallByDefault.set(true)
+    scriptsDependingOnNodeDevInstall.set(listOf())
+    scriptsDependingOnNodeInstall.set(listOf())
+    nodeVersion.set("18.19.0")
     nodePath.set("")
     downloadNode.set(true)
     verbose.set(true)
@@ -58,35 +66,33 @@ npm {
 }
 
 // Example to further configure tasks extracted from scripts in package.json
-tasks.named<NpmScriptTask>("build") {
+tasks.named<NodeScriptTask>("build") {
     // Assign this task to a specific group (default is "scripts")
     group = BasePlugin.BUILD_GROUP
 
     // Configure the task inputs and outputs to allow for up-to-date checks
     inputs.dir("src")
     outputs.dir("dist")
+
+    // Other optional properties
+    ignoreExitValue.set(false) // default true
+    command.set("run")
+    args.set("")
+    packageManager.set(PackageManager.NPM)
 }
 
-// To add script task individually
-npm {
-    autoCreateTasksFromPackageJsonScripts.set(false)
-}
+val serviceProvider = project.gradle.sharedServices.registrations.getByName(NodeService.NAME) as NodeService
 
-val serviceProvider = project.gradle.sharedServices.registrations.getByName("npmService") as NpmService
-
-val task = tasks.register<NpmScriptTask>("gradleTaskName", "npmCommand")
+val task = tasks.register<NodeScriptTask>("gradleTaskName", "nodeCommand")
 task.configure {
     // Ensure dependencies are installed before running the task
-    requiresNpmInstall() // requiresNpmDevInstall() can be used to only install dev dependencies
+    requiresDependencyInstall() // requiresDevDependencyInstall() can be used to only install dev dependencies
 
     // Assign a group to the task
-    group = "npm"
-
-    // Ignore exit value of the process (default false)
-    ignoreExitValue.set(true)
+    group = "scripts"
 
     // Ensure that the process is properly destroyed when gradle is stopped
-    getNpmService().set(serviceProvider)
+    getNodeService().set(serviceProvider)
     usesService(serviceProvider)
 }
 ```
@@ -96,7 +102,7 @@ task.configure {
 ```groovy
 // Apply the plugin
 plugins {
-    id 'io.github.pereduromega.npm.plugin' version '1.3.0'
+    id 'io.github.pereduromega.node.plugin' version '2.0.0'
 }
 
 // When downloadNode is set to true you must provide a repository to download node
@@ -111,18 +117,18 @@ repositories {
     nodeRepository()
 }
 
-// The configuration block npm is mandatory even if it is empty
-npm {
+// The configuration block node is mandatory even if it is empty
+node {
     // All possible configuration options with their default value are shown below
     packageJson.set(project.file('package.json'))
     nodeModules.set(project.file('node_modules'))
     workingDir.set(project.projectDir)
     defaultTaskGroup.set('scripts')
     autoCreateTasksFromPackageJsonScripts.set(true)
-    taskDependingOnNpmInstall.set(true)
-    scriptsDependingOnNpmDevInstall.set(new ArrayList<>())
-    scriptsDependingOnNpmInstall.set(new ArrayList<>())
-    nodeVersion.set('18.15.0')
+    tasksDependingOnNodeInstallByDefault.set(true)
+    scriptsDependingOnNodeDevInstall.set(new ArrayList<>())
+    scriptsDependingOnNodeInstall.set(new ArrayList<>())
+    nodeVersion.set('18.19.0')
     nodePath.set('')
     downloadNode.set(true)
     verbose.set(true)
@@ -139,26 +145,18 @@ tasks.named('build') {
     outputs.dir('dist')
 }
 
-// To add script task individually
-npm {
-    taskDependingOnNpmInstall.set(false)
-}
+NodeService serviceProvider = (NodeService) project.gradle.sharedServices.registrations.getByName(NodeService.NAME)
 
-NpmService serviceProvider = (NpmService) project.gradle.sharedServices.registrations.getByName("npmService")
-
-NpmScriptTask task = tasks.register('gradleTaskName', NpmScriptTask, 'npmCommand')
+NodeScriptTask task = tasks.register('gradleTaskName', NodeScriptTask, 'nodeCommand')
 task.configure {
     // Ensure dependencies are installed before running the task
-    requiresNpmInstall() // requiresNpmDevInstall() can be used to only install dev dependencies
+    requiresDependencyInstall() // requiresDevDependencyInstall() can be used to only install dev dependencies
 
     // Assign a group to the task
-    group = 'npm'
-
-    // Ignore exit value of the process (default false)
-    ignoreExitValue.set(true)
+    group = 'scripts'
 
     // Ensure that the process is properly destroyed when gradle is stopped
-    getNpmService().set(serviceProvider)
+    getNodeService().set(serviceProvider)
     usesService(serviceProvider)
 }
 ```
