@@ -3,12 +3,12 @@ plugins {
     `java-gradle-plugin`
     signing
     id("com.gradle.plugin-publish") version "1.2.1"
-    kotlin("jvm") version "1.9.21"
+    kotlin("jvm") version "1.9.22"
 }
 
-version = "1.4.2"
+version = "2.0.0"
 group = "io.github.pereduromega"
-description = "Simple way to use npm scripts from gradle with scripts defined in package.json being auto-extracted as gradle tasks"
+description = "Simple way to use node scripts (npm, yarn, pnpm) from gradle with scripts defined in package.json being auto-extracted as gradle tasks"
 
 repositories {
     mavenLocal()
@@ -19,19 +19,20 @@ repositories {
 dependencies {
     implementation("org.zeroturnaround:zt-exec:1.12")
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("nu.studer:gradle-credentials-plugin:3.0")
     implementation(gradleApi())
     implementation(kotlin("stdlib"))
 }
 
 gradlePlugin {
-    website.set("https://github.com/PeredurOmega/GradleNpmPlugin")
-    vcsUrl.set("https://github.com/PeredurOmega/GradleNpmPlugin")
+    website.set("https://github.com/PeredurOmega/GradleNodePlugin")
+    vcsUrl.set("https://github.com/PeredurOmega/GradleNodePlugin")
     plugins {
-        create("io.github.pereduromega.npm.plugin") {
-            id = "io.github.pereduromega.npm.plugin"
+        create("io.github.pereduromega.node.plugin") {
+            id = "io.github.pereduromega.node.plugin"
             displayName = "Node Plugin"
-            description = "Simple way to use npm scripts from gradle with scripts defined in package.json being auto-extracted as gradle tasks"
-            tags.set(listOf("npm", "package.json", "scripts"))
+            description = "Simple way to use node scripts (npm, yarn, pnpm) from gradle with scripts defined in package.json being auto-extracted as gradle tasks"
+            tags.set(listOf("node", "npm", "package.json", "scripts"))
             implementationClass = "NodePlugin"
         }
     }
@@ -47,9 +48,9 @@ signing {
 
 afterEvaluate {
     tasks.withType<GenerateMavenPom>().configureEach {
-        pom.name.set("npm.plugin")
-        pom.description.set("Simple way to use npm scripts from gradle with scripts defined in package.json being auto-extracted as gradle tasks")
-        pom.url.set("github.com/PeredurOmega/GradleNpmPlugin")
+        pom.name.set("node.plugin")
+        pom.description.set("Simple way to node scripts (npm, yarn, pnpm) from gradle with scripts defined in package.json being auto-extracted as gradle tasks")
+        pom.url.set("github.com/PeredurOmega/GradleNodePlugin")
         pom.licenses {
             license {
                 name.set("MIT License")
@@ -57,7 +58,7 @@ afterEvaluate {
             }
         }
         pom.scm {
-            url.set("github.com/PeredurOmega/GradleNpmPlugin")
+            url.set("github.com/PeredurOmega/GradleNodePlugin")
         }
         pom.developers {
             developer {

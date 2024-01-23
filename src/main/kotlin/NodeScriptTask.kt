@@ -6,24 +6,30 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.getByType
 import javax.inject.Inject
 
-abstract class NodeScriptTask @Inject constructor(@Input val command: String) : DefaultTask() {
+abstract class NodeScriptTask : DefaultTask() {
     @Internal
     abstract fun getNodeService(): Property<NodeService>
 
     @get:Input
     abstract val ignoreExitValue: Property<Boolean>
 
+    @get:Input
+    abstract val command: Property<String>
+
+    @get:Input
+    abstract val args: Property<String>
+
+    @get:Input
+    abstract val packageManager: Property<PackageManager>
+
     init {
-        description = "Run node script '$command'"
-        @Suppress("LeakingThis")
-        ignoreExitValue.convention(false)
+        description = "Run node script of the name of the task"
     }
 
     @TaskAction
     fun run() {
         val nodeService = getNodeService().get()
-        val packageManager = project.extensions.getByType<NodePluginExtension>().packageManager.get()
-        val process = nodeService.executeCommand(this, packageManager, "run", command)
+        val process = nodeService.executeCommand(this, packageManager.get(), command.get(), args.get())
         process.waitFor()
         if (process.exitValue() != 0) {
             if (!ignoreExitValue.get()) {
