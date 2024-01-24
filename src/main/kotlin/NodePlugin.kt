@@ -38,6 +38,7 @@ class NodePlugin : Plugin<Project> {
         extension.scriptsDependingOnNodeDevInstall.convention(hashSetOf())
         extension.scriptsDependingOnNodeInstall.convention(hashSetOf())
         extension.installCommand.convention("install")
+        extension.cleanTaskName.convention("clean")
         extension.nodeVersion.convention("18.19.0")
         extension.nodePath.convention("")
         extension.verbose.convention(true)
@@ -88,7 +89,7 @@ class NodePlugin : Plugin<Project> {
             }
 
             // Register the clean task to delete node_modules
-            project.tasks.register<NodeCleanTask>(NodeCleanTask.NAME) {
+            project.tasks.register<NodeCleanTask>(NodeCleanTask.getName(project)) {
                 group = BasePlugin.CLEAN_TASK_NAME
                 nodeModules.convention(extension.nodeModules)
             }
