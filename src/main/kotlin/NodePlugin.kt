@@ -38,7 +38,7 @@ class NodePlugin : Plugin<Project> {
         extension.scriptsDependingOnNodeDevInstall.convention(hashSetOf())
         extension.scriptsDependingOnNodeInstall.convention(hashSetOf())
         extension.installCommand.convention("install")
-        extension.cleanTaskName.convention("clean")
+        extension.cleanTaskName.convention(DEFAULT_CLEAN_TASK_NAME)
         extension.nodeVersion.convention("18.19.0")
         extension.nodePath.convention("")
         extension.verbose.convention(true)
@@ -47,6 +47,8 @@ class NodePlugin : Plugin<Project> {
     }
 
     companion object {
+        private const val DEFAULT_CLEAN_TASK_NAME = "clean"
+
         fun registerTasks(project: Project) {
             val extension = project.extensions.getByType<NodePluginExtension>()
 
@@ -92,6 +94,10 @@ class NodePlugin : Plugin<Project> {
             project.tasks.register<NodeCleanTask>(NodeCleanTask.getName(project)) {
                 group = BasePlugin.CLEAN_TASK_NAME
                 nodeModules.convention(extension.nodeModules)
+                // If the cleanTaskName is set, make the new task depend on clean
+                if (extension.cleanTaskName.get() != DEFAULT_CLEAN_TASK_NAME) {
+                    dependsOn(DEFAULT_CLEAN_TASK_NAME)
+                }
             }
 
             // Register package.json scripts as gradle tasks
