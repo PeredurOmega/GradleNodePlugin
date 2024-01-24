@@ -138,7 +138,7 @@ node {
     verbose.set(true)
     packageManager.set(PackageManager.NPM)
     installCommand.set('ci')
-    cleanTaskName.set("nodeClean")
+    cleanTaskName.set('nodeClean')
 }
 
 // Example to further configure tasks extracted from scripts in package.json
