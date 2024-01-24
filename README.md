@@ -64,6 +64,8 @@ node {
     downloadNode.set(true)
     verbose.set(true)
     packageManager.set(PackageManager.NPM)
+    installCommand.set(if (isCI) "ci" else "install")
+    cleanTaskName.set("nodeClean")
 }
 
 // Example to further configure tasks extracted from scripts in package.json
@@ -135,6 +137,8 @@ node {
     downloadNode.set(true)
     verbose.set(true)
     packageManager.set(PackageManager.NPM)
+    installCommand.set('ci')
+    cleanTaskName.set("nodeClean")
 }
 
 // Example to further configure tasks extracted from scripts in package.json
