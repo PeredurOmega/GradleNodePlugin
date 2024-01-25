@@ -38,6 +38,7 @@ class NodePlugin : Plugin<Project> {
         extension.scriptsDependingOnNodeDevInstall.convention(hashSetOf())
         extension.scriptsDependingOnNodeInstall.convention(hashSetOf())
         extension.installCommand.convention("install")
+        extension.cleanTaskName.convention(BasePlugin.CLEAN_TASK_NAME)
         extension.nodeVersion.convention("18.19.0")
         extension.nodePath.convention("")
         extension.verbose.convention(true)
@@ -88,10 +89,18 @@ class NodePlugin : Plugin<Project> {
             }
 
             // Register the clean task to delete node_modules
-            project.tasks.register<NodeCleanTask>(NodeCleanTask.NAME) {
+            project.tasks.register<NodeCleanTask>(NodeCleanTask.getName(project)) {
                 group = BasePlugin.CLEAN_TASK_NAME
                 nodeModules.convention(extension.nodeModules)
             }
+
+            // If cleanTaskName is set, make our clean task a dependency of the default
+            if (extension.cleanTaskName.get() != BasePlugin.CLEAN_TASK_NAME) {
+                project.tasks.named(BasePlugin.CLEAN_TASK_NAME)  {
+                    dependsOn(extension.cleanTaskName.get())
+                }
+            }
+
 
             // Register package.json scripts as gradle tasks
             val scripts = packageJson.get("scripts").asJsonObject
