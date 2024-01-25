@@ -38,7 +38,7 @@ class NodePlugin : Plugin<Project> {
         extension.scriptsDependingOnNodeDevInstall.convention(hashSetOf())
         extension.scriptsDependingOnNodeInstall.convention(hashSetOf())
         extension.installCommand.convention("install")
-        extension.cleanTaskName.convention(DEFAULT_CLEAN_TASK_NAME)
+        extension.cleanTaskName.convention(BasePlugin.CLEAN_TASK_NAME)
         extension.nodeVersion.convention("18.19.0")
         extension.nodePath.convention("")
         extension.verbose.convention(true)
@@ -47,8 +47,6 @@ class NodePlugin : Plugin<Project> {
     }
 
     companion object {
-        private const val DEFAULT_CLEAN_TASK_NAME = "clean"
-
         fun registerTasks(project: Project) {
             val extension = project.extensions.getByType<NodePluginExtension>()
 
@@ -97,8 +95,8 @@ class NodePlugin : Plugin<Project> {
             }
 
             // If cleanTaskName is set, make our clean task a dependency of the default
-            if (extension.cleanTaskName.get() != DEFAULT_CLEAN_TASK_NAME) {
-                project.tasks.named(DEFAULT_CLEAN_TASK_NAME)  {
+            if (extension.cleanTaskName.get() != BasePlugin.CLEAN_TASK_NAME) {
+                project.tasks.named(BasePlugin.CLEAN_TASK_NAME)  {
                     dependsOn(extension.cleanTaskName.get())
                 }
             }
