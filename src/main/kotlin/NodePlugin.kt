@@ -92,13 +92,17 @@ class NodePlugin : Plugin<Project> {
 
             // Register the clean task to delete node_modules
             project.tasks.register<NodeCleanTask>(NodeCleanTask.getName(project)) {
-                group = BasePlugin.CLEAN_TASK_NAME
+                group = extension.defaultTaskGroup.get()
                 nodeModules.convention(extension.nodeModules)
-                // If the cleanTaskName is set, make the new task depend on clean
-                if (extension.cleanTaskName.get() != DEFAULT_CLEAN_TASK_NAME) {
-                    dependsOn(DEFAULT_CLEAN_TASK_NAME)
+            }
+
+            // If cleanTaskName is set, make our clean task a dependency of the default
+            if (extension.cleanTaskName.get() != DEFAULT_CLEAN_TASK_NAME) {
+                project.tasks.named(DEFAULT_CLEAN_TASK_NAME)  {
+                    dependsOn(extension.cleanTaskName.get())
                 }
             }
+
 
             // Register package.json scripts as gradle tasks
             val scripts = packageJson.get("scripts").asJsonObject
