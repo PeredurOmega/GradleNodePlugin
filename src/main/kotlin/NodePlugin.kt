@@ -92,7 +92,7 @@ class NodePlugin : Plugin<Project> {
 
             // Register the clean task to delete node_modules
             project.tasks.register<NodeCleanTask>(NodeCleanTask.getName(project)) {
-                group = extension.defaultTaskGroup.get()
+                group = BasePlugin.CLEAN_TASK_NAME
                 nodeModules.convention(extension.nodeModules)
             }
 
