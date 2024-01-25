@@ -1,23 +1,25 @@
 # Node Plugin for Gradle
 
 > 📣 &nbsp;&nbsp;**Announcement:** This plugin changed name and artifact starting from **2.0.0** to better 
-> reflect its purpose. The old name was `io.github.pereduromega.npm.plugin` and the new one is 
-> `io.github.pereduromega.node.plugin`. This change has been made to reflect the fact that this plugin is not only for
-> npm anymore but also other package managers (such as yarn and pnpm). In a similar way all tasks now reflect this
-> change. Please refer on the documentation below for more info on how to use this new version.
+> reflect its purpose. Please use `io.github.pereduromega.node.plugin` from now on.
+
+[![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/io.github.pereduromega.node.plugin?label=Gradle%20Plugin%20Portal)
+](https://plugins.gradle.org/plugin/io.github.pereduromega.node.plugin)
+[![GitHub License](https://img.shields.io/github/license/PeredurOmega/GradleNodePlugin?label=License)
+](https://github.com/PeredurOmega/GradleNodePlugin/blob/main/LICENSE)
 
 Plugin aiming to provide a simple way to use node scripts (npm, yarn, pnpm) from gradle with scripts defined in
 package.json being auto-extracted as gradle tasks.
 
 **Features:**
 
-* Can download and install Node.js
+* Download and install Node.js
 * Download and handle npm, yarn and pnpm
 * Install package.json dependencies with up-to-date checks
-* Detect scripts defined in package.json and create gradle tasks for them
-* Allows for further configuration of node tasks
-* Properly kills node processes when gradle is stopped
-* Provide a way to configure .npmrc file with specific properties (and credentials encryptions)
+* Detect scripts defined in package.json and create associated gradle tasks
+* Further configuration of node tasks
+* Properly kill node processes when gradle is stopped
+* Configure .npmrc file with specific properties (and credentials encryption)
 
 **Java 11 or higher required**
 
@@ -32,7 +34,7 @@ import jdk.tools.jlink.resources.plugins
 
 // Apply the plugin
 plugins {
-    id("io.github.pereduromega.node.plugin") version "2.0.1"
+    id("io.github.pereduromega.node.plugin") version "2.0.2"
 }
 
 // When downloadNode is set to true you must provide a repository to download node
@@ -64,7 +66,7 @@ node {
     downloadNode.set(true)
     verbose.set(true)
     packageManager.set(PackageManager.NPM)
-    installCommand.set(if (isCI) "ci" else "install")
+    installCommand.set("install")
     cleanTaskName.set("nodeClean")
 }
 
@@ -105,7 +107,7 @@ task.configure {
 ```groovy
 // Apply the plugin
 plugins {
-    id 'io.github.pereduromega.node.plugin' version '2.0.1'
+    id 'io.github.pereduromega.node.plugin' version '2.0.2'
 }
 
 // When downloadNode is set to true you must provide a repository to download node
