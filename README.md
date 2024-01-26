@@ -34,7 +34,7 @@ import jdk.tools.jlink.resources.plugins
 
 // Apply the plugin
 plugins {
-    id("io.github.pereduromega.node.plugin") version "2.0.2"
+    id("io.github.pereduromega.node.plugin") version "2.0.3"
 }
 
 // When downloadNode is set to true you must provide a repository to download node
@@ -82,7 +82,7 @@ tasks.named<NodeScriptTask>("build") {
     // Other optional properties
     ignoreExitValue.set(false) // default true
     command.set("run")
-    args.set(listOf(""))
+    args.set(listOf("scriptName"))
     packageManager.set(PackageManager.NPM)
 }
 
@@ -107,7 +107,7 @@ task.configure {
 ```groovy
 // Apply the plugin
 plugins {
-    id 'io.github.pereduromega.node.plugin' version '2.0.2'
+    id 'io.github.pereduromega.node.plugin' version '2.0.3'
 }
 
 // When downloadNode is set to true you must provide a repository to download node
@@ -139,7 +139,7 @@ node {
     downloadNode.set(true)
     verbose.set(true)
     packageManager.set(PackageManager.NPM)
-    installCommand.set('ci')
+    installCommand.set('install')
     cleanTaskName.set('nodeClean')
 }
 
