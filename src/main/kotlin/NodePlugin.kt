@@ -5,10 +5,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.provider.Provider
-import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.getByType
-import org.gradle.kotlin.dsl.named
-import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.*
 import setup.NodeSetupTask
 import setup.PackageManagerSetupTask
 import setup.PlatformHelper
@@ -17,7 +14,7 @@ import java.util.regex.Pattern
 
 class NodePlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        project.plugins.apply(CredentialsPlugin::class.java)
+        project.plugins.apply(CredentialsPlugin::class)
         createExtension(project)
 
         project.afterEvaluate {
@@ -58,9 +55,9 @@ class NodePlugin : Plugin<Project> {
 
             // Register service to be able to launch and kill node processes / subprocess
             val serviceProvider =
-                    project.gradle.sharedServices.registerIfAbsent(NodeService.NAME, NodeService::class.java) {
-                        parameters.workingDir.convention(extension.workingDir)
-                    }
+                project.gradle.sharedServices.registerIfAbsent(NodeService.NAME, NodeService::class.java) {
+                    parameters.workingDir.convention(extension.workingDir)
+                }
 
             // Read package json
             val packageJsonTxt = extension.packageJson.get().asFile.readText()
@@ -96,27 +93,28 @@ class NodePlugin : Plugin<Project> {
 
             // If cleanTaskName is set, make our clean task a dependency of the default
             if (extension.cleanTaskName.get() != BasePlugin.CLEAN_TASK_NAME) {
-                project.tasks.named(BasePlugin.CLEAN_TASK_NAME)  {
+                project.tasks.named(BasePlugin.CLEAN_TASK_NAME) {
                     dependsOn(extension.cleanTaskName.get())
                 }
             }
-
 
             // Register package.json scripts as gradle tasks
             val scripts = packageJson.get("scripts").asJsonObject
             scripts.keySet().forEach { scriptName ->
                 val taskName = scriptName.toGradleName()
                 project.tasks.register<NodeScriptTask>(taskName) {
-                    if (extension.scriptsDependingOnNodeDevInstall.get().contains(taskName)) requiresDevDependencyInstall()
-                    else if (extension.scriptsDependingOnNodeInstall.get().contains(taskName)) requiresDependencyInstall()
-                    else if (extension.tasksDependingOnNodeInstallByDefault.get()) requiresDependencyInstall()
+                    if (extension.scriptsDependingOnNodeDevInstall.get().contains(taskName)) {
+                        requiresDevDependencyInstall()
+                    } else if (extension.scriptsDependingOnNodeInstall.get().contains(taskName)) {
+                        requiresDependencyInstall()
+                    } else if (extension.tasksDependingOnNodeInstallByDefault.get()) requiresDependencyInstall()
                     group = extension.defaultTaskGroup.get()
                     getNodeService().convention(serviceProvider)
                     usesService(serviceProvider)
                     packageManager.convention(extension.packageManager.get())
                     ignoreExitValue.convention(false)
                     command.convention("run")
-                    args.convention(scriptName)
+                    args.convention(listOf(scriptName))
                 }
             }
         }
@@ -136,10 +134,17 @@ class NodePlugin : Plugin<Project> {
             }
         }
 
-        private fun configurePackageManagerSetupTask(project: Project, extension: NodePluginExtension, nodeService: Provider<NodeService>, packageJson: JsonObject) {
+        private fun configurePackageManagerSetupTask(
+            project: Project,
+            extension: NodePluginExtension,
+            nodeService: Provider<NodeService>,
+            packageJson: JsonObject
+        ) {
             var extractedPackageManager = ""
             if (!extension.packageManager.isPresent) {
-                extractedPackageManager = if (packageJson.has("packageManager")) packageJson.get("packageManager").asString else "npm"
+                extractedPackageManager = if (packageJson.has("packageManager")) {
+                    packageJson.get("packageManager").asString
+                } else "npm"
                 extension.packageManager.convention(PackageManager.fromString(extractedPackageManager))
             }
 
@@ -153,7 +158,9 @@ class NodePlugin : Plugin<Project> {
 
             project.afterEvaluate {
                 tasks.named<PackageManagerSetupTask>(PackageManagerSetupTask.NAME) {
-                    if (extractedPackageManager.isNotBlank()) packageManagerWithVersion.convention(extractedPackageManager)
+                    if (extractedPackageManager.isNotBlank()) {
+                        packageManagerWithVersion.convention(extractedPackageManager)
+                    }
                     packageManager.convention(extension.packageManager)
                     nodeDir.convention(this@afterEvaluate.layout.dir(extension.nodePath.map { File(it) }))
                 }
