@@ -82,7 +82,7 @@ tasks.named<NodeScriptTask>("build") {
     // Other optional properties
     ignoreExitValue.set(false) // default true
     command.set("run")
-    args.set("")
+    args.set(listOf(""))
     packageManager.set(PackageManager.NPM)
 }
 
@@ -151,6 +151,9 @@ tasks.named('build') {
     // Configure the task inputs and outputs to allow for up-to-date checks
     inputs.dir('src')
     outputs.dir('dist')
+
+    // Other optional properties
+    args.set(new ArrayList<>())
 }
 
 NodeService serviceProvider = (NodeService) project.gradle.sharedServices.registrations.getByName(NodeService.NAME)
