@@ -22,6 +22,6 @@ abstract class NodeCleanTask : DefaultTask() {
 
     @TaskAction
     fun run() {
-        nodeModules.get().asFile.deleteRecursively()
+        delete(nodeModules.get().asFile)
     }
 }
