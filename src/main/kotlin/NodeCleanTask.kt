@@ -1,14 +1,14 @@
-import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.getByType
 
-abstract class NodeCleanTask : DefaultTask() {
+abstract class NodeCleanTask : Delete() {
 
     companion object {
-        fun getName (project: Project): String {
+        fun getName(project: Project): String {
             return project.extensions.getByType<NodePluginExtension>().cleanTaskName.get()
         }
     }
