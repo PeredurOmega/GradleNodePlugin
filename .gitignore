@@ -2,3 +2,6 @@
 /.gradle/
 /build/
 /build/classes/kotlin/main/
+/sample/build/
+/sample/.angular/
+/sample/node_modules/
