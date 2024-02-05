@@ -1,11 +1,11 @@
+import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.getByType
 
-abstract class NodeCleanTask : Delete() {
+abstract class NodeCleanTask : DefaultTask() {
 
     companion object {
         fun getName(project: Project): String {
@@ -22,6 +22,8 @@ abstract class NodeCleanTask : Delete() {
 
     @TaskAction
     fun run() {
-        delete(nodeModules.get().asFile)
+        project.delete {
+            delete(nodeModules.get().asFile)
+        }
     }
 }
