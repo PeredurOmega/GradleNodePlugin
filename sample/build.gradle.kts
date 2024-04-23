@@ -1,5 +1,5 @@
 plugins {
-    id("io.github.pereduromega.node.plugin") version "2.0.4"
+    id("io.github.pereduromega.node.plugin") version "2.0.5"
 }
 
 repositories {
