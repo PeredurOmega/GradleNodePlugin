@@ -3,6 +3,7 @@ import com.google.gson.JsonObject
 import nu.studer.gradle.credentials.CredentialsPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.*
@@ -93,7 +94,8 @@ class NodePlugin : Plugin<Project> {
 
             // If cleanTaskName is set, make our clean task a dependency of the default
             if (extension.cleanTaskName.get() != BasePlugin.CLEAN_TASK_NAME) {
-                project.tasks.named(BasePlugin.CLEAN_TASK_NAME) {
+                val baseCleanTask = project.tasks.findByName(BasePlugin.CLEAN_TASK_NAME)
+                baseCleanTask?.configure<Task> {
                     dependsOn(extension.cleanTaskName.get())
                 }
             }
