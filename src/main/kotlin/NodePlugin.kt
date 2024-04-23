@@ -92,14 +92,6 @@ class NodePlugin : Plugin<Project> {
                 nodeModules.convention(extension.nodeModules)
             }
 
-            // If cleanTaskName is set, make our clean task a dependency of the default
-            if (extension.cleanTaskName.get() != BasePlugin.CLEAN_TASK_NAME) {
-                val baseCleanTask = project.tasks.findByName(BasePlugin.CLEAN_TASK_NAME)
-                baseCleanTask?.configure<Task> {
-                    dependsOn(extension.cleanTaskName.get())
-                }
-            }
-
             // Register package.json scripts as gradle tasks
             val scripts = packageJson.get("scripts").asJsonObject
             scripts.keySet().forEach { scriptName ->
@@ -117,6 +109,16 @@ class NodePlugin : Plugin<Project> {
                     ignoreExitValue.convention(false)
                     command.convention("run")
                     args.convention(listOf(scriptName))
+                }
+            }
+
+            // If cleanTaskName is set, make our clean task a dependency of the default
+            // We configure this task afterward to allow for an eventual registration from the scripts of the
+            // package.json
+            if (extension.cleanTaskName.get() != BasePlugin.CLEAN_TASK_NAME) {
+                val baseCleanTask = project.tasks.findByName(BasePlugin.CLEAN_TASK_NAME)
+                baseCleanTask?.configure<Task> {
+                    finalizedBy(extension.cleanTaskName.get())
                 }
             }
         }
