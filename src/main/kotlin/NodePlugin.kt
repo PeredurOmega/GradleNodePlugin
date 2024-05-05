@@ -3,7 +3,7 @@ import com.google.gson.JsonObject
 import nu.studer.gradle.credentials.CredentialsPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
+import org.gradle.api.UnknownTaskException
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.*
@@ -116,9 +116,13 @@ class NodePlugin : Plugin<Project> {
             // We configure this task afterward to allow for an eventual registration from the scripts of the
             // package.json
             if (extension.cleanTaskName.get() != BasePlugin.CLEAN_TASK_NAME) {
-                val baseCleanTask = project.tasks.findByName(BasePlugin.CLEAN_TASK_NAME)
-                baseCleanTask?.configure<Task> {
-                    finalizedBy(extension.cleanTaskName.get())
+                try {
+                    project.tasks.named(BasePlugin.CLEAN_TASK_NAME) {
+                        finalizedBy(extension.cleanTaskName.get())
+                    }
+                } catch (e: UnknownTaskException) {
+                    // If the base clean task doesn't exist we just ignore the error as this won't impact the overall
+                    // plugin, the clean task still being accessible through the custom name provided.
                 }
             }
         }
