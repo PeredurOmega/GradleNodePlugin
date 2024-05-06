@@ -56,9 +56,7 @@ class NodePlugin : Plugin<Project> {
 
             // Register service to be able to launch and kill node processes / subprocess
             val serviceProvider =
-                project.gradle.sharedServices.registerIfAbsent(NodeService.NAME, NodeService::class.java) {
-                    parameters.workingDir.convention(extension.workingDir)
-                }
+                project.gradle.sharedServices.registerIfAbsent(NodeService.NAME, NodeService::class.java) {}
 
             // Read package json
             val packageJsonTxt = extension.packageJson.get().asFile.readText()
