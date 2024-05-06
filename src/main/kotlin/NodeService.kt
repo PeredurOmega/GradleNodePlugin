@@ -1,6 +1,5 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Task
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import org.gradle.kotlin.dsl.getByType
@@ -32,13 +31,14 @@ abstract class NodeService : BuildService<BuildServiceParameters.None>, AutoClos
         if (setEnvPath) {
             val env = mutableMapOf<String, String>()
             env += System.getenv()
-            val pathList = arrayListOf<String>(if (isWindows) nodePath else "$nodePath/bin")
+            val pathList = arrayListOf(if (isWindows) nodePath else "$nodePath/bin")
             pathList.add(env["PATH"] ?: env["Path"] ?: "")
             env["PATH"] = pathList.joinToString(File.pathSeparator)
             process.environment(env)
             logger.debug("Setting process env PATH to ${env["PATH"]}")
         }
-        val outputStream = if (extensions.verbose.get()) LifecycleLoggerStream.of(logger) else Slf4jStream.of(logger).asInfo()
+        val outputStream =
+            if (extensions.verbose.get()) LifecycleLoggerStream.of(logger) else Slf4jStream.of(logger).asInfo()
         process.redirectOutput(outputStream)
         process.redirectError(Slf4jStream.of(logger).asError())
         process.directory(extensions.workingDir.get().asFile)
@@ -49,9 +49,6 @@ abstract class NodeService : BuildService<BuildServiceParameters.None>, AutoClos
 
     fun executeCommand(task: Task, packageManager: PackageManager, vararg command: String): Process {
         val nodeExecutor = task.createProcess(packageManager, *command)
-        /*workingDir?.let {
-            nodeExecutor.directory(it)
-        }*/
         val process = nodeExecutor.start().process
         processes.add(process)
         return process
