@@ -34,7 +34,7 @@ import jdk.tools.jlink.resources.plugins
 
 // Apply the plugin
 plugins {
-    id("io.github.pereduromega.node.plugin") version "2.0.6"
+    id("io.github.pereduromega.node.plugin") version "2.0.7"
 }
 
 // When downloadNode is set to true you must provide a repository to download node
@@ -107,7 +107,7 @@ task.configure {
 ```groovy
 // Apply the plugin
 plugins {
-    id 'io.github.pereduromega.node.plugin' version '2.0.6'
+    id 'io.github.pereduromega.node.plugin' version '2.0.7'
 }
 
 // When downloadNode is set to true you must provide a repository to download node
