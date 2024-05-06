@@ -8,7 +8,7 @@ import org.zeroturnaround.exec.ProcessExecutor
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
 import java.io.File
 
-abstract class NodeService : BuildService<NodeService.Params>, AutoCloseable {
+abstract class NodeService : BuildService<BuildServiceParameters.None>, AutoCloseable {
 
     companion object {
         const val NAME = "nodeService"
@@ -41,12 +41,8 @@ abstract class NodeService : BuildService<NodeService.Params>, AutoCloseable {
         val outputStream = if (extensions.verbose.get()) LifecycleLoggerStream.of(logger) else Slf4jStream.of(logger).asInfo()
         process.redirectOutput(outputStream)
         process.redirectError(Slf4jStream.of(logger).asError())
-
+        process.directory(extensions.workingDir.get().asFile)
         return process
-    }
-
-    internal interface Params : BuildServiceParameters {
-        val workingDir: DirectoryProperty
     }
 
     private val processes = arrayListOf<Process>()
@@ -56,7 +52,6 @@ abstract class NodeService : BuildService<NodeService.Params>, AutoCloseable {
         /*workingDir?.let {
             nodeExecutor.directory(it)
         }*/
-        nodeExecutor.directory(parameters.workingDir.get().asFile)
         val process = nodeExecutor.start().process
         processes.add(process)
         return process
