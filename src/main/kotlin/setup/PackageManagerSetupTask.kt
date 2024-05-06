@@ -7,7 +7,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
-import java.io.File
 import java.nio.file.Files
 
 abstract class PackageManagerSetupTask : DefaultTask() {

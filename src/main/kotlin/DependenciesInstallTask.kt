@@ -36,7 +36,6 @@ abstract class DependenciesInstallTask : DefaultTask() {
 
     @TaskAction
     fun run() {
-        val workingDir = packageJson.get().asFile.parentFile //TODO: use workingDir from NodePluginExtension
         val packageManager = project.extensions.getByType<NodePluginExtension>().packageManager.get()
         val installCommand = project.extensions.getByType<NodePluginExtension>().installCommand.get()
         val process = getNodeService().get().executeCommand(this, packageManager, installCommand, *args.get().toTypedArray())
