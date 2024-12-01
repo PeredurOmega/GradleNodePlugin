@@ -36,5 +36,5 @@ fun RepositoryHandler.nodeRepository(
     }
 }
 
-val Project.credentials : CredentialsContainer
-    get() = extensions.extraProperties.get(CREDENTIALS_CONTAINER_PROPERTY) as CredentialsContainer
+val Project.credentials: CredentialsContainer
+    get() = extensions.extraProperties[CREDENTIALS_CONTAINER_PROPERTY] as CredentialsContainer

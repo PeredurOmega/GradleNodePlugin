@@ -6,7 +6,7 @@ import org.gradle.api.provider.SetProperty
 interface NodePluginExtension {
     val packageJson: RegularFileProperty
     val nodeModules: DirectoryProperty
-    val workingDir: DirectoryProperty
+    val workingDir: Property<String>
     val defaultTaskGroup: Property<String>
     val autoCreateTasksFromPackageJsonScripts: Property<Boolean>
     val tasksDependingOnNodeInstallByDefault: Property<Boolean>

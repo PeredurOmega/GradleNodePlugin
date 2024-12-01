@@ -1,8 +1,6 @@
 import org.apache.tools.ant.taskdefs.condition.Os
-import org.gradle.api.Task
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import org.gradle.kotlin.dsl.getByType
 import org.zeroturnaround.exec.ProcessExecutor
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream
 import java.io.File
@@ -13,10 +11,11 @@ abstract class NodeService : BuildService<BuildServiceParameters.None>, AutoClos
         const val NAME = "nodeService"
     }
 
-    private fun Task.createProcess(packageManager: PackageManager, vararg commands: String): ProcessExecutor {
-        val extensions = project.extensions.getByType<NodePluginExtension>()
-        val nodePath = extensions.nodePath.get()
-
+    private fun PackageManagerCommandTask.createProcess(
+        packageManager: PackageManager = this.packageManager.get(),
+        vararg commands: String
+    ): ProcessExecutor {
+        val nodePath = nodePath.get()
         val isWindows = Os.isFamily(Os.FAMILY_WINDOWS)
         var setEnvPath = false
         var executorPath = packageManager.toString()
@@ -38,17 +37,24 @@ abstract class NodeService : BuildService<BuildServiceParameters.None>, AutoClos
             logger.debug("Setting process env PATH to ${env["PATH"]}")
         }
         val outputStream =
-            if (extensions.verbose.get()) LifecycleLoggerStream.of(logger) else Slf4jStream.of(logger).asInfo()
+            if (verbose.get()) LifecycleLoggerStream.of(logger) else Slf4jStream.of(logger).asInfo()
         process.redirectOutput(outputStream)
         process.redirectError(Slf4jStream.of(logger).asError())
-        process.directory(extensions.workingDir.get().asFile)
+        process.directory(File(workingDir.get()))
         return process
     }
 
     private val processes = arrayListOf<Process>()
 
-    fun executeCommand(task: Task, packageManager: PackageManager, vararg command: String): Process {
-        val nodeExecutor = task.createProcess(packageManager, *command)
+    fun executeCommand(task: PackageManagerCommandTask, vararg command: String) =
+        executeCommand(task, task.packageManager.get(), command = command)
+
+    fun executeCommand(
+        task: PackageManagerCommandTask,
+        packageManager: PackageManager = task.packageManager.get(),
+        vararg command: String
+    ): Process {
+        val nodeExecutor = task.createProcess(packageManager, commands = command)
         val process = nodeExecutor.start().process
         processes.add(process)
         return process

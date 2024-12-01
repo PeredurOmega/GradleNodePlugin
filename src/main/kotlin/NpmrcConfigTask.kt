@@ -5,9 +5,8 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.getByType
 import java.io.File
-import javax.swing.JOptionPane
 
-abstract class NpmrcConfigTask() : DefaultTask() {
+abstract class NpmrcConfigTask : DefaultTask() {
 
     @Internal
     abstract fun getNodeService(): Property<NodeService>

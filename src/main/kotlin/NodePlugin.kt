@@ -1,3 +1,4 @@
+import PackageManagerCommandTask.Companion.setDefaultConfig
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import nu.studer.gradle.credentials.CredentialsPlugin
@@ -29,7 +30,7 @@ class NodePlugin : Plugin<Project> {
         val extension = project.extensions.create<NodePluginExtension>("node")
         extension.packageJson.convention(project.layout.projectDirectory.file("package.json"))
         extension.nodeModules.convention(project.layout.projectDirectory.dir("node_modules"))
-        extension.workingDir.convention(project.layout.projectDirectory)
+        extension.workingDir.convention(project.layout.projectDirectory.asFile.absolutePath)
         extension.defaultTaskGroup.convention("scripts")
         extension.autoCreateTasksFromPackageJsonScripts.convention(true)
         extension.tasksDependingOnNodeInstallByDefault.convention(true)
@@ -54,56 +55,66 @@ class NodePlugin : Plugin<Project> {
 
             configureNodeSetupTask(project, extension)
 
-            // Register service to be able to launch and kill node processes / subprocess
-            val serviceProvider =
-                project.gradle.sharedServices.registerIfAbsent(NodeService.NAME, NodeService::class.java) {}
-
             // Read package json
             val packageJsonTxt = extension.packageJson.get().asFile.readText()
             val packageJson = Gson().fromJson(packageJsonTxt, JsonObject::class.java)
 
-            configurePackageManagerSetupTask(project, extension, serviceProvider, packageJson)
+            configurePackageManagerSetupTask(project, extension, packageJson)
 
             // Register dependencies installation and configuring it to be cached when possible
             project.tasks.register<DependenciesInstallTask>(DependenciesInstallTask.NAME) {
                 dependsOn(PackageManagerSetupTask.NAME)
+                description = "Install node dependencies"
+                installCommand.convention(extension.installCommand)
+                ignoreExitValue.convention(false)
+                args.convention(listOf())
                 inputs.file(extension.packageJson)
                 outputs.dir(extension.nodeModules)
                 this.packageJson.convention(extension.packageJson)
                 group = extension.defaultTaskGroup.get()
-                getNodeService().convention(serviceProvider)
+                setDefaultConfig(extension)
             }
 
             // Register dependencies installation dev and configuring it to be cached when possible
             project.tasks.register<DependenciesInstallTask>(DependenciesInstallTask.DEV_NAME) {
                 dependsOn(PackageManagerSetupTask.NAME)
+                description = "Install dev node dependencies"
+                installCommand.convention(extension.installCommand)
+                ignoreExitValue.convention(false)
+                args.convention(listOf())
                 this.packageJson.convention(extension.packageJson)
                 outputs.dir { extension.nodeModules.get() }
                 args.convention(listOf("--only=dev"))
                 group = extension.defaultTaskGroup.get()
-                getNodeService().convention(serviceProvider)
+                setDefaultConfig(extension)
             }
 
             // Register the clean task to delete node_modules
             project.tasks.register<NodeCleanTask>(NodeCleanTask.getName(project)) {
+                description = "Delete the node modules folder (i.e. clean the dependencies)"
                 group = BasePlugin.CLEAN_TASK_NAME
                 nodeModules.convention(extension.nodeModules)
             }
 
             // Register package.json scripts as gradle tasks
-            val scripts = packageJson.get("scripts").asJsonObject
+            val scripts = packageJson["scripts"].asJsonObject
             scripts.keySet().forEach { scriptName ->
                 val taskName = scriptName.toGradleName()
                 project.tasks.register<NodeScriptTask>(taskName) {
-                    if (extension.scriptsDependingOnNodeDevInstall.get().contains(taskName)) {
-                        requiresDevDependencyInstall()
-                    } else if (extension.scriptsDependingOnNodeInstall.get().contains(taskName)) {
-                        requiresDependencyInstall()
-                    } else if (extension.tasksDependingOnNodeInstallByDefault.get()) requiresDependencyInstall()
+                    when {
+                        extension.scriptsDependingOnNodeDevInstall.get().contains(taskName) -> {
+                            requiresDevDependencyInstall()
+                        }
+
+                        extension.scriptsDependingOnNodeInstall.get().contains(taskName) -> {
+                            requiresDependencyInstall()
+                        }
+
+                        extension.tasksDependingOnNodeInstallByDefault.get() -> requiresDependencyInstall()
+                    }
                     group = extension.defaultTaskGroup.get()
-                    getNodeService().convention(serviceProvider)
-                    usesService(serviceProvider)
-                    packageManager.convention(extension.packageManager.get())
+                    description = "Run node script of the name of the task"
+                    setDefaultConfig(extension)
                     ignoreExitValue.convention(false)
                     command.convention("run")
                     args.convention(listOf(scriptName))
@@ -127,6 +138,7 @@ class NodePlugin : Plugin<Project> {
 
         private fun configureNodeSetupTask(project: Project, extension: NodePluginExtension) {
             project.tasks.register<NodeSetupTask>(NodeSetupTask.NAME) {
+                description = "Download and install a local node/npm version."
                 onlyIf { extension.downloadNode.get() }
             }
             project.afterEvaluate {
@@ -143,23 +155,23 @@ class NodePlugin : Plugin<Project> {
         private fun configurePackageManagerSetupTask(
             project: Project,
             extension: NodePluginExtension,
-            nodeService: Provider<NodeService>,
             packageJson: JsonObject
         ) {
             var extractedPackageManager = ""
             if (!extension.packageManager.isPresent) {
                 extractedPackageManager = if (packageJson.has("packageManager")) {
-                    packageJson.get("packageManager").asString
+                    packageJson["packageManager"].asString
                 } else "npm"
                 extension.packageManager.convention(PackageManager.fromString(extractedPackageManager))
             }
 
             project.tasks.register<PackageManagerSetupTask>(PackageManagerSetupTask.NAME) {
+                description =
+                    "Install the package manager defined in the package.json file or explicitly in the build.gradle.kts file."
                 onlyIf { packageManager.get() != PackageManager.NPM }
                 dependsOn(NodeSetupTask.NAME)
-                packageManager.convention(extension.packageManager)
+                setDefaultConfig(extension)
                 group = extension.defaultTaskGroup.get()
-                getNodeService().convention(nodeService)
             }
 
             project.afterEvaluate {
@@ -167,7 +179,6 @@ class NodePlugin : Plugin<Project> {
                     if (extractedPackageManager.isNotBlank()) {
                         packageManagerWithVersion.convention(extractedPackageManager)
                     }
-                    packageManager.convention(extension.packageManager)
                     nodeDir.convention(this@afterEvaluate.layout.dir(extension.nodePath.map { File(it) }))
                 }
             }

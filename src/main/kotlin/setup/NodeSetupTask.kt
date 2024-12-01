@@ -2,14 +2,12 @@ package setup
 
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileTree
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.file.RelativePath
+import org.gradle.api.file.*
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.nio.file.Files
+import javax.inject.Inject
 
 abstract class NodeSetupTask : DefaultTask() {
 
@@ -17,15 +15,17 @@ abstract class NodeSetupTask : DefaultTask() {
         const val NAME = "nodeSetup"
     }
 
+    @get:Inject
+    abstract val fs: FileSystemOperations
+
+    @get:Inject
+    abstract val archiveOperations: ArchiveOperations
+
     @get:InputFile
     abstract val nodeArchiveFile: RegularFileProperty
 
     @get:OutputDirectory
     abstract val nodeDir: DirectoryProperty
-
-    init {
-        description = "Download and install a local node/npm version."
-    }
 
     @TaskAction
     fun exec() {
@@ -35,7 +35,7 @@ abstract class NodeSetupTask : DefaultTask() {
     }
 
     private fun deleteExistingNode() {
-        project.delete {
+        fs.delete {
             delete(nodeDir)
         }
         logger.debug("{} cleaned", nodeDir)
@@ -43,9 +43,9 @@ abstract class NodeSetupTask : DefaultTask() {
 
     private fun unpackNodeArchive() {
         val archiveFile = nodeArchiveFile.get().asFile
-        if (archiveFile.name.endsWith("zip")) copyNodeInstallContent(project.zipTree(archiveFile))
+        if (archiveFile.name.endsWith("zip")) copyNodeInstallContent(archiveOperations.zipTree(archiveFile))
         else { // i.e. not windows
-            copyNodeInstallContent(project.tarTree(archiveFile))
+            copyNodeInstallContent(archiveOperations.tarTree(archiveFile))
 
             // Fix broken symlink
             fixBrokenSymlink("npm")
@@ -55,7 +55,7 @@ abstract class NodeSetupTask : DefaultTask() {
 
     private fun copyNodeInstallContent(archiveTree: FileTree) {
         logger.debug("Extracting node archive: {} into {}", archiveTree, nodeDir)
-        project.copy {
+        fs.copy {
             from(archiveTree) {
                 eachFile {
                     relativePath = RelativePath(true, *relativePath.segments.drop(1).toTypedArray())
@@ -83,8 +83,9 @@ abstract class NodeSetupTask : DefaultTask() {
     private fun setExecutableFlag() {
         if (!Os.isFamily(Os.FAMILY_WINDOWS)) {
             val nodeExec = nodeDir.file("bin/node").get().asFile
-            nodeExec.setExecutable(true, false)
+            val succeeded = nodeExec.setExecutable(true, false)
             logger.debug("Set executable flag on {}", nodeExec)
+            if (succeeded) logger.debug("Execution succeeded") else logger.debug("Execution failed")
         }
     }
 }
