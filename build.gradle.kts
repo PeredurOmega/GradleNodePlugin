@@ -2,11 +2,11 @@ plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
     signing
-    id("com.gradle.plugin-publish") version "1.2.1"
-    kotlin("jvm") version "1.9.23"
+    id("com.gradle.plugin-publish") version "1.3.0"
+    kotlin("jvm") version "2.1.0"
 }
 
-version = "2.0.7"
+version = "2.1.0"
 group = "io.github.pereduromega"
 description = "Simple way to use node scripts (npm, yarn, pnpm) from gradle with scripts defined in package.json being auto-extracted as gradle tasks"
 
@@ -18,7 +18,7 @@ repositories {
 
 dependencies {
     implementation("org.zeroturnaround:zt-exec:1.12")
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.code.gson:gson:2.11.0")
     implementation("nu.studer:gradle-credentials-plugin:3.0")
     implementation(gradleApi())
     implementation(kotlin("stdlib"))
@@ -82,12 +82,4 @@ publishing {
             }
         }
     }
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
-    }
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
 }
