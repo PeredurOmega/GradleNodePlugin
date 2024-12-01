@@ -1,6 +1,6 @@
 # Node Plugin for Gradle
 
-> 📣 &nbsp;&nbsp;**Announcement:** This plugin changed name and artifact starting from **2.0.0** to better 
+> 📣 &nbsp;&nbsp;**Announcement:** This plugin changed name and artifact starting from **2.0.0** to better
 > reflect its purpose. Please use `io.github.pereduromega.node.plugin` from now on.
 
 [![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/io.github.pereduromega.node.plugin?label=Gradle%20Plugin%20Portal)
@@ -21,20 +21,19 @@ package.json being auto-extracted as gradle tasks.
 * Properly kill node processes when gradle is stopped
 * Configure .npmrc file with specific properties (and credentials encryption)
 
-**Java 11 or higher required**
-
 ## Usage
 
 ### Kotlin
 
 ```kotlin
 
+import PackageManagerCommandTask.Companion.setDefaultConfig
 import jdk.nashorn.internal.runtime.Debug.id
 import jdk.tools.jlink.resources.plugins
 
 // Apply the plugin
 plugins {
-    id("io.github.pereduromega.node.plugin") version "2.0.7"
+    id("io.github.pereduromega.node.plugin") version "2.1.0"
 }
 
 // When downloadNode is set to true you must provide a repository to download node
@@ -54,13 +53,13 @@ node {
     // All possible configuration options with their default value are shown below
     packageJson.set(project.file("package.json"))
     nodeModules.set(project.file("node_modules"))
-    workingDir.set(project.projectDir)
+    workingDir.set(project.layout.projectDirectory.asFile.absolutePath)
     defaultTaskGroup.set("scripts")
     autoCreateTasksFromPackageJsonScripts.set(true)
     tasksDependingOnNodeInstallByDefault.set(true)
     scriptsDependingOnNodeDevInstall.set(listOf())
     scriptsDependingOnNodeInstall.set(listOf())
-    installCommand.set('install')
+    installCommand.set("install")
     nodeVersion.set("18.19.0")
     nodePath.set("")
     downloadNode.set(true)
@@ -86,19 +85,13 @@ tasks.named<NodeScriptTask>("build") {
     packageManager.set(PackageManager.NPM)
 }
 
-val serviceProvider = project.gradle.sharedServices.registrations.getByName(NodeService.NAME) as NodeService
-
 val task = tasks.register<NodeScriptTask>("gradleTaskName", "nodeCommand")
 task.configure {
     // Ensure dependencies are installed before running the task
     requiresDependencyInstall() // requiresDevDependencyInstall() can be used to only install dev dependencies
 
-    // Assign a group to the task
-    group = "scripts"
-
-    // Ensure that the process is properly destroyed when gradle is stopped
-    getNodeService().set(serviceProvider)
-    usesService(serviceProvider)
+    // Config the task with the default config from the project extension
+    setDefaultConfig(project)
 }
 ```
 
@@ -107,7 +100,7 @@ task.configure {
 ```groovy
 // Apply the plugin
 plugins {
-    id 'io.github.pereduromega.node.plugin' version '2.0.7'
+    id 'io.github.pereduromega.node.plugin' version '2.1.0'
 }
 
 // When downloadNode is set to true you must provide a repository to download node
@@ -127,7 +120,7 @@ node {
     // All possible configuration options with their default value are shown below
     packageJson.set(project.file('package.json'))
     nodeModules.set(project.file('node_modules'))
-    workingDir.set(project.projectDir)
+    workingDir.set(project.layout.projectDirectory.asFile.absolutePath)
     defaultTaskGroup.set('scripts')
     autoCreateTasksFromPackageJsonScripts.set(true)
     tasksDependingOnNodeInstallByDefault.set(true)
@@ -156,19 +149,13 @@ tasks.named('build') {
     args.set(new ArrayList<>())
 }
 
-NodeService serviceProvider = (NodeService) project.gradle.sharedServices.registrations.getByName(NodeService.NAME)
-
 NodeScriptTask task = tasks.register('gradleTaskName', NodeScriptTask, 'nodeCommand')
 task.configure {
     // Ensure dependencies are installed before running the task
     requiresDependencyInstall() // requiresDevDependencyInstall() can be used to only install dev dependencies
 
-    // Assign a group to the task
-    group = 'scripts'
-
-    // Ensure that the process is properly destroyed when gradle is stopped
-    getNodeService().set(serviceProvider)
-    usesService(serviceProvider)
+    // Config the task with the default config from the project extension
+    setDefaultConfig(project)
 }
 ```
 
