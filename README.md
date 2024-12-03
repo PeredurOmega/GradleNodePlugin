@@ -21,6 +21,8 @@ package.json being auto-extracted as gradle tasks.
 * Properly kill node processes when gradle is stopped
 * Configure .npmrc file with specific properties (and credentials encryption)
 
+**Java 11 or higher required**
+
 ## Usage
 
 ### Kotlin
@@ -33,7 +35,7 @@ import jdk.tools.jlink.resources.plugins
 
 // Apply the plugin
 plugins {
-    id("io.github.pereduromega.node.plugin") version "2.1.0"
+    id("io.github.pereduromega.node.plugin") version "2.1.1"
 }
 
 // When downloadNode is set to true you must provide a repository to download node
@@ -100,7 +102,7 @@ task.configure {
 ```groovy
 // Apply the plugin
 plugins {
-    id 'io.github.pereduromega.node.plugin' version '2.1.0'
+    id 'io.github.pereduromega.node.plugin' version '2.1.1'
 }
 
 // When downloadNode is set to true you must provide a repository to download node

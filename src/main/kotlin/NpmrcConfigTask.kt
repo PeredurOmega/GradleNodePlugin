@@ -1,21 +1,27 @@
+import nu.studer.gradle.credentials.domain.CredentialsContainer
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
-import org.gradle.kotlin.dsl.getByType
 import java.io.File
 
 abstract class NpmrcConfigTask : DefaultTask() {
-
-    @Internal
-    abstract fun getNodeService(): Property<NodeService>
 
     @get:Input
     protected val properties: MutableMap<String, String> = mutableMapOf()
 
     @get:Input
     protected val encryptedProperties: MutableList<String> = mutableListOf()
+
+    @get:Input
+    abstract val nodePath: Property<String>
+
+    @get:Input
+    abstract val credentials: Property<CredentialsContainer>
+
+    fun provideProjectCredentials() {
+        credentials.set(project.credentials)
+    }
 
     fun setProperty(name: String, v: String) {
         properties[name] = v
@@ -25,16 +31,11 @@ abstract class NpmrcConfigTask : DefaultTask() {
         encryptedProperties.add(key)
     }
 
-    init {
-        description = "Configure the .npmrc file for this project"
-    }
-
     @TaskAction
     fun run() {
-        val extensions = project.extensions.getByType<NodePluginExtension>()
-        val nodePath = extensions.nodePath.get()
+        val nodePath = nodePath.get()
         val allProperties = properties + encryptedProperties.map {
-            it to (project.credentials.forKey(it) ?: requestInput(it))
+            it to (credentials.get().forKey(it) ?: requestInput(it))
         }
         if (allProperties.isEmpty()) logger.info("No additional properties to set")
         else {
