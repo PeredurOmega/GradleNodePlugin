@@ -6,7 +6,7 @@ plugins {
     kotlin("jvm") version "2.1.0"
 }
 
-version = "2.1.0"
+version = "2.1.1"
 group = "io.github.pereduromega"
 description = "Simple way to use node scripts (npm, yarn, pnpm) from gradle with scripts defined in package.json being auto-extracted as gradle tasks"
 
@@ -82,4 +82,13 @@ publishing {
             }
         }
     }
+}
+
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
