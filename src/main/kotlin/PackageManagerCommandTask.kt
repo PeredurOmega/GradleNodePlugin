@@ -8,7 +8,7 @@ import org.gradle.kotlin.dsl.getByType
 abstract class PackageManagerCommandTask : DefaultTask() {
 
     companion object {
-        fun PackageManagerCommandTask.setDefaultConfig(extension: NodePluginExtension) {
+        fun PackageManagerCommandTask.setConventionConfig(extension: NodePluginExtension) {
             packageManager.convention(extension.packageManager)
             nodePath.convention(extension.nodePath)
             verbose.convention(extension.verbose)
@@ -23,8 +23,8 @@ abstract class PackageManagerCommandTask : DefaultTask() {
 
         // Can be used by plugin users
         @Suppress("unused")
-        fun PackageManagerCommandTask.setDefaultConfig(project: Project) =
-            setDefaultConfig(project.extensions.getByType<NodePluginExtension>())
+        fun PackageManagerCommandTask.setConventionConfig(project: Project) =
+            setConventionConfig(project.extensions.getByType<NodePluginExtension>())
     }
 
     @get:Input

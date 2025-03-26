@@ -1,4 +1,4 @@
-import PackageManagerCommandTask.Companion.setDefaultConfig
+import PackageManagerCommandTask.Companion.setConventionConfig
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import nu.studer.gradle.credentials.CredentialsPlugin
@@ -72,7 +72,7 @@ class NodePlugin : Plugin<Project> {
                 outputs.dir(extension.nodeModules)
                 this.packageJson.convention(extension.packageJson)
                 group = extension.defaultTaskGroup.get()
-                setDefaultConfig(extension)
+                setConventionConfig(extension)
             }
 
             // Register dependencies installation dev and configuring it to be cached when possible
@@ -86,7 +86,7 @@ class NodePlugin : Plugin<Project> {
                 outputs.dir { extension.nodeModules.get() }
                 args.convention(listOf("--only=dev"))
                 group = extension.defaultTaskGroup.get()
-                setDefaultConfig(extension)
+                setConventionConfig(extension)
             }
 
             // Register the clean task to delete node_modules
@@ -96,27 +96,35 @@ class NodePlugin : Plugin<Project> {
                 nodeModules.convention(extension.nodeModules)
             }
 
+            // Define all conventions for all NodeScriptTask (even custom ones)
+            // We define this before actually registering any other tasks in order to be able
+            // to easily override those conventions
+            project.tasks.withType<NodeScriptTask> {
+                when {
+                    extension.scriptsDependingOnNodeDevInstall.get().contains(name) -> {
+                        requiresDevDependencyInstall()
+                    }
+
+                    extension.scriptsDependingOnNodeInstall.get().contains(name) -> {
+                        requiresDependencyInstall()
+                    }
+
+                    extension.tasksDependingOnNodeInstallByDefault.get() -> requiresDependencyInstall()
+                }
+                setConventionConfig(extension)
+                ignoreExitValue.convention(false)
+                command.convention("run")
+                args.convention(listOf(name))
+            }
+
             // Register package.json scripts as gradle tasks
             val scripts = packageJson["scripts"].asJsonObject
             scripts.keySet().forEach { scriptName ->
                 val taskName = scriptName.toGradleName()
                 project.tasks.register<NodeScriptTask>(taskName) {
-                    when {
-                        extension.scriptsDependingOnNodeDevInstall.get().contains(taskName) -> {
-                            requiresDevDependencyInstall()
-                        }
-
-                        extension.scriptsDependingOnNodeInstall.get().contains(taskName) -> {
-                            requiresDependencyInstall()
-                        }
-
-                        extension.tasksDependingOnNodeInstallByDefault.get() -> requiresDependencyInstall()
-                    }
                     group = extension.defaultTaskGroup.get()
                     description = "Run node script of the name of the task"
-                    setDefaultConfig(extension)
-                    ignoreExitValue.convention(false)
-                    command.convention("run")
+                    setConventionConfig(extension)
                     args.convention(listOf(scriptName))
                 }
             }
@@ -170,7 +178,7 @@ class NodePlugin : Plugin<Project> {
                     "Install the package manager defined in the package.json file or explicitly in the build.gradle.kts file."
                 onlyIf { packageManager.get() != PackageManager.NPM }
                 dependsOn(NodeSetupTask.NAME)
-                setDefaultConfig(extension)
+                setConventionConfig(extension)
                 group = extension.defaultTaskGroup.get()
             }
 

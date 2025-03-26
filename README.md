@@ -29,13 +29,12 @@ package.json being auto-extracted as gradle tasks.
 
 ```kotlin
 
-import PackageManagerCommandTask.Companion.setDefaultConfig
 import jdk.nashorn.internal.runtime.Debug.id
 import jdk.tools.jlink.resources.plugins
 
 // Apply the plugin
 plugins {
-    id("io.github.pereduromega.node.plugin") version "2.1.1"
+    id("io.github.pereduromega.node.plugin") version "2.2.0"
 }
 
 // When downloadNode is set to true you must provide a repository to download node
@@ -87,13 +86,11 @@ tasks.named<NodeScriptTask>("build") {
     packageManager.set(PackageManager.NPM)
 }
 
-val task = tasks.register<NodeScriptTask>("gradleTaskName", "nodeCommand")
-task.configure {
-    // Ensure dependencies are installed before running the task
-    requiresDependencyInstall() // requiresDevDependencyInstall() can be used to only install dev dependencies
-
-    // Config the task with the default config from the project extension
-    setDefaultConfig(project)
+// Example to register a custom script
+tasks.register<NodeScriptTask>("gradleTaskName") {
+    group = "custom-scripts"
+    description = "Custom script task"
+    args.set(listOf("command"))
 }
 ```
 
@@ -102,7 +99,7 @@ task.configure {
 ```groovy
 // Apply the plugin
 plugins {
-    id 'io.github.pereduromega.node.plugin' version '2.1.1'
+    id 'io.github.pereduromega.node.plugin' version '2.2.1'
 }
 
 // When downloadNode is set to true you must provide a repository to download node
@@ -151,13 +148,11 @@ tasks.named('build') {
     args.set(new ArrayList<>())
 }
 
-NodeScriptTask task = tasks.register('gradleTaskName', NodeScriptTask, 'nodeCommand')
-task.configure {
-    // Ensure dependencies are installed before running the task
-    requiresDependencyInstall() // requiresDevDependencyInstall() can be used to only install dev dependencies
-
-    // Config the task with the default config from the project extension
-    setDefaultConfig(project)
+// Example to register a custom script
+tasks.register("gradleTaskName", NodeScriptTask) {
+    group = "custom-scripts"
+    description = "Custom script task"
+    args.set(listOf("command"))
 }
 ```
 
