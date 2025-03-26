@@ -2,8 +2,8 @@ plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
     signing
-    id("com.gradle.plugin-publish") version "1.3.0"
-    kotlin("jvm") version "2.1.0"
+    id("com.gradle.plugin-publish") version "1.3.1"
+    kotlin("jvm") version "2.1.20"
 }
 
 version = "2.1.1"
@@ -18,7 +18,7 @@ repositories {
 
 dependencies {
     implementation("org.zeroturnaround:zt-exec:1.12")
-    implementation("com.google.code.gson:gson:2.11.0")
+    implementation("com.google.code.gson:gson:2.12.1")
     implementation("nu.studer:gradle-credentials-plugin:3.0")
     implementation(gradleApi())
     implementation(kotlin("stdlib"))
