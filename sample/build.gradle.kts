@@ -1,5 +1,5 @@
 plugins {
-    id("io.github.pereduromega.node.plugin") version "2.1.1"
+    id("io.github.pereduromega.node.plugin") version "2.2.0"
 }
 
 repositories {
@@ -17,4 +17,10 @@ tasks.register<NpmrcConfigTask>("npmrc") {
     setProperty("PROPERTY", "VALUE")
     setEncryptedProperty("ENC_PROPERTY")
     provideProjectCredentials()
+}
+
+tasks.register<NodeScriptTask>("extraTest") {
+    group = "custom-scripts"
+    description = "Custom script task"
+    args.set(listOf("test"))
 }
